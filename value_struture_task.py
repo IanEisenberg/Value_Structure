@@ -14,7 +14,7 @@ import cPickle
 import datetime
 import json
 import numpy as np
-from psychopy import visual, core, event
+from psychopy import visual, core, event, sound
 import sys,os
 import yaml
 
@@ -217,14 +217,14 @@ class valueStructure:
                 trial['correct']=True
                 # record points for bonus
                 self.pointtracker += 1
+            else:
+                error_sound = sound.Sound(secs=.1,value=500)
+                error_sound.play() 
         # If subject did not respond within the stimulus window clear the stim
         # and admonish the subject
         if trial['rt']==999:
-            self.clearWindow()            
-            core.wait(1)
-            self.presentTextToWindow('Please Respond Faster')
-            core.wait(1)
-            self.clearWindow()
+            miss_sound = sound.Sound(secs=.1,value=1000)
+            miss_sound.play() 
             
         # log trial and add to data
         self.writeToLog(json.dumps(trial))
@@ -248,7 +248,7 @@ class valueStructure:
 
 
 # shuffle stims
-stims = ['images/%s.png' % '9' for i in range(1,16)]
+stims = ['images/%s.png' % i for i in range(1,16)]
 np.random.shuffle(stims)
 # graph structure
 graph = {0: [1,2,3,14],
@@ -273,8 +273,8 @@ def gen_trials(trial_count=100):
     for i in range(trial_count):
         trial = {'stim_index': curr_i,
                  'stim_file': stims[curr_i],
-                 'duration': .5,
-                 'rotation': 90*np.random.choice([0,1])}
+                 'duration': 1.5,
+                 'rotation': 90*np.random.choice([0,1],p=[.8,.2])}
         trials.append(trial)
         # random walk
         curr_i = np.random.choice(graph[curr_i])
