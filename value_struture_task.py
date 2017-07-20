@@ -14,6 +14,7 @@ import cPickle
 import datetime
 import json
 import numpy as np
+import pandas as pd
 from psychopy import visual, core, event, sound
 import sys,os
 import yaml
@@ -22,7 +23,9 @@ class valueStructure:
     """ class defining a probabilistic context task
     """
     
-    def __init__(self,subjid,save_dir,trials,fullscreen = False):
+    def __init__(self,subjid,save_dir,trials,
+                 familiarization_trials,
+                 fullscreen = False):
         # set up "holder" variables
         self.alldata=[]  
         self.pointtracker=0
@@ -31,15 +34,18 @@ class valueStructure:
         self.trialnum = 0
         
         # set up argument variables
+        self.familiarization_trials = familiarization_trials
         self.fullscreen = fullscreen
         self.save_dir = save_dir  
         self.subjid=subjid
         self.timestamp=datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         self.trials = trials
+        self.stim_files = list(np.unique([t['stim_file'] for t in self.trials]))
         
         # set up static keys
         self.action_keys = ['left','right']
         self.quit_key = 'q'
+        self.trigger_key = '5'
         self.text_color = [1]*3
         
         # set up window
@@ -104,7 +110,7 @@ class valueStructure:
         self.win.flip()
         
         
-    def presentTextToWindow(self,text,size=.15):
+    def presentTextToWindow(self,text,size=.15, duration=None):
         """ present a text message to the screen
         return:  time of completion
         """
@@ -113,13 +119,17 @@ class valueStructure:
             self.textStim=visual.TextStim(self.win, text=text,font='BiauKai',
                                 height=size,color=self.text_color, colorSpace=u'rgb',
                                 opacity=1,depth=0.0,
-                                alignHoriz='center',wrapWidth=50)
+                                alignHoriz='center',
+                                alignVert='center',
+                                wrapWidth=50)
         else:
             self.textStim.setText(text)
             self.textStim.setHeight(size)
             self.textStim.setColor(self.text_color)
         self.textStim.draw()
         self.win.flip()
+        if duration:
+            core.wait(duration)
         return core.getTime()
 
     def clearWindow(self):
@@ -163,24 +173,39 @@ class valueStructure:
         self.closeWindow()
         sys.exit()
 
-    def presentStim(self, stim_file, rotation, duration):
+    def presentInstruction(self, text):
+        self.presentTextToWindow(text)
+        resp,self.startTime=self.waitForKeypress(self.trigger_key)
+        self.checkRespForQuitKey(resp)
+        event.clearEvents()
+        
+    def presentStim(self, stim_file, rotation, textstim=None, duration=None):
         stim = visual.ImageStim(self.win, 
                                 image=stim_file,
                                 ori=rotation,
                                 units='deg')
         stim.draw()
+        if textstim:
+            textstim.draw()
+        
         self.win.flip()
         
         recorded_keys = []
         stim_clock = core.Clock()
-        while stim_clock.getTime() < duration:
-            keys = event.getKeys(self.action_keys + [self.quit_key],
-                                 timeStamped=True)
-            for key,response_time in keys:
-                # check for quit key
-                if key == self.quit_key:
-                    self.shutDownEarly()
-                recorded_keys+=keys
+        if duration:
+            while stim_clock.getTime() < duration:
+                keys = event.getKeys(self.action_keys + [self.quit_key],
+                                     timeStamped=True)
+                for key,response_time in keys:
+                    self.checkRespForQuitKey(key)
+                    recorded_keys+=keys
+        else:
+            while len(recorded_keys) == 0:
+                keys = event.getKeys(self.action_keys + [self.quit_key],
+                                     timeStamped=True)
+                for key,response_time in keys:
+                    self.checkRespForQuitKey(key)
+                    recorded_keys+=keys
         return recorded_keys
         
     def presentTrial(self, trial):
@@ -203,7 +228,7 @@ class valueStructure:
                                 trial['duration'])
         if len(keys)>0:
             first_key = keys[0]
-            choice = ['not_rot','rot'][self.action_keys.index(first_key[0])]
+            choice = ['unrot','rot'][self.action_keys.index(first_key[0])]
             print('Choice: %s' % choice)
             # record response
             trial['response'] = choice
@@ -212,7 +237,7 @@ class valueStructure:
             trial['secondary_responses']=[i[0] for i in keys[1:]]
             trial['secondary_rts']=[i[1] for i in keys[1:]]
             # get feedback and update tracker
-            correct_choice = 'rot'
+            correct_choice = ['unrot','rot'][[0,90].index(trial['rotation'])]
             if correct_choice == choice:
                 trial['correct']=True
                 # record points for bonus
@@ -230,13 +255,82 @@ class valueStructure:
         self.writeToLog(json.dumps(trial))
         self.alldata.append(trial)
         return trial
+    
+    
+    def run_familiarization(self):
+        i=0
+        while i<15:
+            filey = self.stim_files[i//2]
+            text = ['Unrotated','Rotated'][i%2==0]
+            textstim = visual.TextStim(self.win, text, pos=[0,.5], units='norm')
+            keys = self.presentStim(filey, [0,90][i%2==0], textstim)
+            if keys[0][0] == 'right':
+                i+=1
+            elif i>0:
+                i-=1
+                
+    def run_familiarization_test(self):
+        np.random.shuffle(self.familiarization_trials)
+        for trial in self.familiarization_trials:
+            self.presentTrial(trial)
+                            
+    def run_graph_learning(self):
+        self.presentTextToWindow('Get Ready!', duration=2)
+        self.clearWindow()
+        for trial in self.trials:
+            self.presentTrial(trial)
             
     def run_task(self, pause_trials = None):
         self.setupWindow()
-        self.startTime = core.getTime()
-        
-        for trial in self.trials:
-            self.presentTrial(trial)
+        # instructions
+        self.presentInstruction(
+            """
+            In the first part of this study,
+            stimuli will be shown one at a time for a short amount of time. Your
+            task is to indicated whether the stimulus is rotated or unrotated.
+            
+                
+            We will start by familiarizing you with the stimuli. 
+            You will see each stimulus twice, first unrotated, then rotated. 
+            """)
+
+
+        learned=False
+        while not learned:
+            self.run_familiarization()
+            self.presentInstruction(
+                """
+                We will now practice responding to the stimuli. Indicate whether
+                the stimulus is unrotated or rotated.
+                
+                        Left Key: Unrotated
+                        Right Key: Rotated
+                """)
+            self.run_familiarization_test()
+            acc = np.mean([t['correct'] for t in self.alldata 
+                           if t['exp_stage'] == 'familiarization_test'])
+            print(acc)
+            if acc>.8:
+                learned=True
+            else:
+                self.presentInstruction(
+                    """
+                    Seems you can use a refresher! Please look over the
+                    stimuli again and try to remember which way the stimulus
+                    is unrotated
+                    """)
+                
+        self.presentInstruction(
+            """
+            Finished with familiarization. In the next section, indicated
+            whether the image is unrotated or rotated.
+            
+                Left Key: Unrotated
+                Right Key: Rotated
+                
+            Each correct choice will earn you $1.  
+            """)
+        self.run_graph_learning()
                 
         # clean up and save
         self.writeData()
@@ -246,42 +340,3 @@ class valueStructure:
         self.closeWindow()
 
 
-
-# shuffle stims
-stims = ['images/%s.png' % i for i in range(1,16)]
-np.random.shuffle(stims)
-# graph structure
-graph = {0: [1,2,3,14],
-         1: [0,2,3,4],
-         2: [0,1,3,4],
-         3: [0,1,2,4],
-         4: [1,2,3,5],
-         5: [4,6,7,8],
-         6: [5,7,8,9],
-         7: [5,6,8,9],
-         8: [5,6,7,9],
-         9: [6,7,8,10],
-         10: [9,11,12,13],
-         11: [10,12,13,14],
-         12: [10,11,13,14],
-         13: [10,11,12,14],
-         14: [11,12,13,0]}
-
-def gen_trials(trial_count=100):
-    trials = []
-    curr_i = np.random.randint(0,14)
-    for i in range(trial_count):
-        trial = {'stim_index': curr_i,
-                 'stim_file': stims[curr_i],
-                 'duration': 1.5,
-                 'rotation': 90*np.random.choice([0,1],p=[.8,.2])}
-        trials.append(trial)
-        # random walk
-        curr_i = np.random.choice(graph[curr_i])
-    return trials
-    
-subj = 'test'
-save_dir = os.path.join('Data',subj)
-trials = [{'duration':2}]*4
-task = valueStructure(subj, save_dir, gen_trials())
-task.run_task()
