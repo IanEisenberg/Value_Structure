@@ -22,11 +22,10 @@ class valueStructure:
     """ class defining a probabilistic context task
     """
     
-    def __init__(self,subjid,save_dir,stim_files,trials,
-                 familiarization_trials,
-                 fullscreen = False):
+    def __init__(self,subjid, save_dir, stim_files, graph,
+                 trials, familiarization_trials, fullscreen = False):
         # set up "holder" variables
-        self.costdata=[]
+        self.pricedata=[]
         self.structuredata=[]  
         self.pointtracker=0
         self.startTime=[]
@@ -36,6 +35,7 @@ class valueStructure:
         # set up argument variables
         self.familiarization_trials = familiarization_trials
         self.fullscreen = fullscreen
+        self.graph = graph
         self.save_dir = save_dir  
         self.stim_files = stim_files
         self.subjid=subjid
@@ -277,7 +277,7 @@ class valueStructure:
     
     def run_familiarization(self):
         i=0
-        while i<15:
+        while i<len(self.stim_files)*2:
             filey = self.stim_files[i//2]
             text = ['Unrotated','Rotated'][i%2==1]
             textstim = visual.TextStim(self.win, text, pos=[0,.5], units='norm')
@@ -318,13 +318,14 @@ class valueStructure:
             initial_rating['rating'] = ratingScale.getRating()
             initial_rating['rt'] = ratingScale.getRT()
             initial_rating['history'] = ratingScale.getHistory()
-            self.costdata.append(initial_rating)
+            self.pricedata.append(initial_rating)
         
     def run_task(self, pause_trials = None):
         self.setupWindow()
         
+        self.presentInstruction('Welcome! Press 5 to continue...')
         #initial price guess
-        initial_question = "How much does a non-alcoholic bottled drink cost?"
+        initial_question = "How much does a non-alcoholic bottled drink cost on average?"
         textstim = visual.TextStim(self.win, initial_question, 
                                    pos=[0,.5], units='norm')
         self.run_price_rating([{'stim': textstim}])
@@ -362,7 +363,7 @@ class valueStructure:
             acc = np.mean([t['correct'] for t in self.structuredata 
                            if t['exp_stage'] == 'familiarization_test'])
             print(acc)
-            if acc>.9:
+            if acc>.3:
                 learned=True
             else:
                 self.presentInstruction(
@@ -382,20 +383,20 @@ class valueStructure:
             
                 Left Key: Unrotated
                 Right Key: Rotated
-                
-            Each correct choice will earn you $1.  
-            
+                            
             Press 5 to continue...
             """)
         self.run_graph_learning()
         
         self.presentInstruction(
             """
+            Finished with that section. Take a break!
+            
             In the next section we will ask you to guess the price of the
             different drinks. We will tell you the price of 4 different drinks
             (represented by the logos) first.
             
-            Press 5 to continue...
+            When you are ready, press 5 to continue...
             """)
         
         # labeling phase
