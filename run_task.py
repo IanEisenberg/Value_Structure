@@ -29,7 +29,7 @@ def gen_trials(graph, stims, trial_count=100, duration=1.5, exp_stage=None,
         trial = {'stim_index': stim_i,
                  'stim_file': stims[stim_i],
                  'duration': duration,
-                 'rotation': 90*np.random.choice([0,1],p=[.8,.2]),
+                 'rotation': 90*np.random.choice([0,1],p=[.85,.15]),
                  'exp_stage': exp_stage}
         trials.append(trial)
     return trials
@@ -63,5 +63,6 @@ familiarization_trials = gen_trials(graph, stims, 20, duration=None,
 trials = gen_trials(graph, stims, 1400, exp_stage='structure_learning')
 subj = 'test'
 save_dir = path.join('Data',subj)
-task = valueStructure(subj, save_dir, trials, familiarization_trials)
+task = valueStructure(subj, save_dir, stims, 
+                      trials, familiarization_trials, False)
 task.run_task()
