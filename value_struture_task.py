@@ -16,6 +16,7 @@ import json
 import numpy as np
 import pandas as pd
 from psychopy import visual, core, event, sound
+from random import sample
 import sys,os
 
 class valueStructure:
@@ -88,7 +89,8 @@ class valueStructure:
         data = {}
         data['subcode']=self.subjid
         data['timestamp']=self.timestamp
-        data['taskdata']=self.structuredata
+        data['structuredata']=self.structuredata
+        data['pricedata']=self.pricedata
         try:
             f=open(save_loc,'w')
         except IOError:
@@ -238,6 +240,8 @@ class valueStructure:
         trial['onset']=core.getTime() - self.startTime
         trial['response'] = 999
         trial['rt'] = 999
+        trial['secondary_responses'] = []
+        trial['secondary_rts'] = []
         trial['correct'] = False
         # present stimulus and get response
         event.clearEvents()
@@ -335,10 +339,12 @@ class valueStructure:
             """
             In the first part of this study,
             logos for different drinks will be shown one at a time for 
-            a short amount of time. Your task is to indicated 
-            whether the logo is rotated or unrotated.
+            a short amount of time. These logos are made up, but are associated
+            with real drinks that have been set behind the scenes.
             
-                
+            Your firsttask is to indicated whether 
+            the logo is rotated or unrotated.
+            
             We will start by familiarizing you with the logos. 
             Press the left and right keys to move through the logos.
             
@@ -363,7 +369,7 @@ class valueStructure:
             acc = np.mean([t['correct'] for t in self.structuredata 
                            if t['exp_stage'] == 'familiarization_test'])
             print(acc)
-            if acc>.3:
+            if acc>.9:
                 learned=True
             else:
                 self.presentInstruction(
@@ -383,7 +389,10 @@ class valueStructure:
             
                 Left Key: Unrotated
                 Right Key: Rotated
-                            
+            
+            Each logo will only come up on the screen for a short amount of time.
+            Please respond as quickly and accurately as possible.
+            
             Press 5 to continue...
             """)
         self.run_graph_learning()
@@ -425,9 +434,9 @@ class valueStructure:
             """)
         
         # price rating phase
-        unknown_stims = [s for s in self.stim_files 
-                         if s not in labeled_stims]*self.n_price_ratings
-        np.random.shuffle(unknown_stims)
+        unknown_stims = []
+        for rep in range(self.n_price_ratings):
+            unknown_stims+=sample(self.stim_files,len(self.stim_files))
         rating_trials = []
         for stim_file in unknown_stims:
             stim_file = stim = visual.ImageStim(self.win, image=stim_file,
