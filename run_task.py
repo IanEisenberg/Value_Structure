@@ -11,8 +11,8 @@ from utils import gen_trials, graph_from_dict
 # subject parameters
 subj = 'test'
 save_dir = os.path.join('Data',subj)
-n_structure_trials = 20
-n_familiarization_trials = 15
+n_structure_trials = 1400
+n_familiarization_trials = 30
 
 
 
