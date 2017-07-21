@@ -11,8 +11,8 @@ from utils import gen_trials, graph_from_dict
 # subject parameters
 subj = 'test'
 save_dir = os.path.join('Data',subj)
-n_structure_trials = 1400
-n_familiarization_trials = 30
+n_structure_trials = 20
+n_familiarization_trials = 15
 
 
 
@@ -51,7 +51,7 @@ task = valueStructure(subj, save_dir, stims, graph,
 task.run_task()
 
 
-
+"""
 # plot graph
 g = graph_from_dict(graph)
 layout = g.layout('kk')
@@ -67,3 +67,4 @@ process.wait()
 for f in glob('*.png'):
     os.remove(f)
 
+"""

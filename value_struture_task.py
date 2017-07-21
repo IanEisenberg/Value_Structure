@@ -46,9 +46,11 @@ class valueStructure:
         # set up static variables
         self.action_keys = ['left','right']
         self.quit_key = 'q'
-        self.labeled_nodes = [(1,5), (2,3), (8,10), (9,1)] #node: price
+        self.labeled_nodes = [(0,8.50), (1,7), (10,1.50), (11,2.25)] #node: price
+        np.random.sample(self.labeled_nodes)
         self.n_price_ratings = 20
         self.trigger_key = '5'
+        self.test_familiarization = False
         self.text_color = [1]*3
         
         # set up window
@@ -318,11 +320,12 @@ class valueStructure:
                 trial['stim'].draw()
                 ratingScale.draw()
                 self.win.flip()
-            initial_rating = {}
-            initial_rating['rating'] = ratingScale.getRating()
-            initial_rating['rt'] = ratingScale.getRT()
-            initial_rating['history'] = ratingScale.getHistory()
-            self.pricedata.append(initial_rating)
+            rating = {}
+            rating['rating'] = ratingScale.getRating()
+            rating['rt'] = ratingScale.getRT()
+            rating['history'] = ratingScale.getHistory()
+            self.pricedata.append(rating)
+            self.writeToLog(json.dumps(rating))
         
     def run_task(self, pause_trials = None):
         self.setupWindow()
@@ -342,7 +345,7 @@ class valueStructure:
             a short amount of time. These logos are made up, but are associated
             with real drinks that have been set behind the scenes.
             
-            Your firsttask is to indicated whether 
+            Your first task is to indicated whether 
             the logo is rotated or unrotated.
             
             We will start by familiarizing you with the logos. 
@@ -350,36 +353,39 @@ class valueStructure:
             
             Press 5 to continue...
             """)
-
-        learned=False
-        while not learned:
-            self.run_familiarization()
-            self.presentInstruction(
-                """
-                We will now practice responding to the stimuli. 
-                Indicate whether the stimulus 
-                is unrotated or rotated.
-                
-                        Left Key: Unrotated
-                        Right Key: Rotated
-                        
-                Press 5 to continue...
-                """)
-            self.run_familiarization_test()
-            acc = np.mean([t['correct'] for t in self.structuredata 
-                           if t['exp_stage'] == 'familiarization_test'])
-            print(acc)
-            if acc>.9:
-                learned=True
-            else:
+        
+        if self.test_familiarization == True:
+            learned=False
+            while not learned:
+                self.run_familiarization()
                 self.presentInstruction(
                     """
-                    Seems you could use a refresher! Please look over the
-                    logos again and try to remember which way the stimulus
-                    is unrotated
+                    We will now practice responding to the stimuli. 
+                    Indicate whether the stimulus 
+                    is unrotated or rotated.
                     
+                            Left Key: Unrotated
+                            Right Key: Rotated
+                            
                     Press 5 to continue...
                     """)
+                self.run_familiarization_test()
+                acc = np.mean([t['correct'] for t in self.structuredata 
+                               if t['exp_stage'] == 'familiarization_test'])
+                print(acc)
+                if acc>.75:
+                    learned=True
+                else:
+                    self.presentInstruction(
+                        """
+                        Seems you could use a refresher! Please look over the
+                        logos again and try to remember which way the stimulus
+                        is unrotated
+                        
+                        Press 5 to continue...
+                        """)
+        else:
+            self.run_familiarization()
                 
         # structure learning 
         self.presentInstruction(
