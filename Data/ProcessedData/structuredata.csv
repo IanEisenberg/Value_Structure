@@ -1,0 +1,41 @@
+,correct,duration,exp_stage,onset,response,rotation,rt,secondary_responses,secondary_rts,stim_file,stim_index,subjid,community,community_cross,steps_within_community
+0,True,1.5,structure_learning,2.02154302597,unrot,0,16.2185969353,[],[],images/15.png,10,test,2,,1
+1,True,1.5,structure_learning,3.52747297287,unrot,0,17.2991819382,[],[],images/10.png,12,test,2,False,2
+2,False,1.5,structure_learning,5.03182888031,rot,0,18.5930988789,['right'],[19.673364877700806],images/2.png,13,test,2,False,3
+3,True,1.5,structure_learning,6.55334687233,rot,90,20.9130210876,[],[],images/10.png,12,test,2,False,4
+4,False,1.5,structure_learning,8.05815982819,999,0,999.0,[],[],images/6.png,14,test,2,False,5
+5,True,1.5,structure_learning,9.56505393982,unrot,0,23.8883469105,['left'],[24.07737898826599],images/13.png,0,test,0,True,1
+6,True,1.5,structure_learning,11.0691828728,unrot,0,24.2582559586,"['left', 'left']","[24.43934202194214, 24.644073963165283]",images/7.png,2,test,0,False,2
+7,False,1.5,structure_learning,12.5735750198,rot,0,26.6862030029,"['right', 'right']","[26.938905954360962, 27.12895393371582]",images/11.png,1,test,0,False,3
+8,False,1.5,structure_learning,14.0791299343,999,0,999.0,[],[],images/1.png,3,test,0,False,4
+9,False,1.5,structure_learning,15.5850858688,rot,0,29.9908418655,['right'],[30.219249963760376],images/11.png,1,test,0,False,5
+10,False,1.5,structure_learning,17.0899238586,rot,0,30.4403209686,"['right', 'right', 'right']","[30.645071983337402, 30.802258014678955, 31.086770057678223]",images/7.png,2,test,0,False,6
+11,False,1.5,structure_learning,18.5946929455,unrot,90,32.383409977,[],[],images/5.png,4,test,0,False,7
+12,True,1.5,structure_learning,20.1007049084,unrot,0,33.7659029961,"['left', 'left', 'left', 'left']","[34.010618925094604, 34.2235369682312, 34.44518303871155, 34.63337588310242]",images/1.png,3,test,0,False,8
+13,False,1.5,structure_learning,21.6049969196,rot,0,35.6566030979,"['right', 'right']","[35.941088914871216, 36.145880937576294]",images/13.png,0,test,0,False,9
+14,False,1.5,structure_learning,23.1108880043,rot,0,36.3678300381,['right'],[36.571829080581665],images/1.png,3,test,0,False,10
+15,False,1.5,structure_learning,24.61718297,999,0,999.0,[],[],images/5.png,4,test,0,False,11
+16,False,1.5,structure_learning,26.1221280098,999,0,999.0,[],[],images/8.png,5,test,1,True,1
+17,False,1.5,structure_learning,27.630273819,999,0,999.0,[],[],images/5.png,4,test,0,True,1
+18,False,1.5,structure_learning,29.1348388195,999,0,999.0,[],[],images/7.png,2,test,0,False,2
+19,False,1.5,structure_learning,30.6398479939,999,0,999.0,[],[],images/5.png,4,test,0,False,3
+20,False,1.5,structure_learning,32.1459329128,999,90,999.0,[],[],images/11.png,1,test,0,False,4
+21,False,1.5,structure_learning,33.6508629322,999,0,999.0,[],[],images/13.png,0,test,0,False,5
+22,False,1.5,structure_learning,35.1556618214,999,0,999.0,[],[],images/7.png,2,test,0,False,6
+23,True,1.5,structure_learning,36.6613337994,unrot,0,50.6416208744,"['left', 'left']","[50.85498595237732, 51.02738094329834]",images/1.png,3,test,0,False,7
+24,False,1.5,structure_learning,38.1657338142,999,90,999.0,[],[],images/7.png,2,test,0,False,8
+25,False,1.5,structure_learning,39.6726419926,999,0,999.0,[],[],images/11.png,1,test,0,False,9
+26,False,1.5,structure_learning,41.177325964,rot,0,54.9478039742,"['right', 'right', 'right']","[55.16077399253845, 55.468786001205444, 55.71323800086975]",images/1.png,3,test,0,False,10
+27,False,1.5,structure_learning,42.682063818,999,0,999.0,[],[],images/11.png,1,test,0,False,11
+28,False,1.5,structure_learning,44.1868000031,999,0,999.0,[],[],images/7.png,2,test,0,False,12
+29,False,1.5,structure_learning,45.6922118664,rot,0,59.9533600807,[],[],images/1.png,3,test,0,False,13
+30,False,1.5,structure_learning,47.1967999935,rot,0,61.6541280746,[],[],images/5.png,4,test,0,False,14
+31,False,1.5,structure_learning,48.701363802,rot,0,62.7502799034,[],[],images/11.png,1,test,0,False,15
+32,False,1.5,structure_learning,50.2084889412,rot,0,63.4646720886,[],[],images/5.png,4,test,0,False,16
+33,False,1.5,structure_learning,51.7133529186,unrot,90,65.5968649387,"['left', 'left', 'left']","[65.86522102355957, 66.09396195411682, 66.29091191291809]",images/7.png,2,test,0,False,17
+34,False,1.5,structure_learning,53.2188799381,rot,0,66.9082489014,[],[],images/1.png,3,test,0,False,18
+35,True,1.5,structure_learning,54.7259278297,unrot,0,68.5550720692,[],[],images/13.png,0,test,0,False,19
+36,False,1.5,structure_learning,56.2302689552,999,0,999.0,[],[],images/6.png,14,test,2,True,1
+37,False,1.5,structure_learning,57.7351608276,999,90,999.0,[],[],images/13.png,0,test,0,True,1
+38,False,1.5,structure_learning,59.239787817,999,0,999.0,[],[],images/11.png,1,test,0,False,2
+39,False,1.5,structure_learning,60.7451188564,rot,0,74.2338349819,[],[],images/13.png,0,test,0,False,3

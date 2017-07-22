@@ -45,10 +45,11 @@ class valueStructure:
         
         # set up static variables
         self.action_keys = ['left','right']
+        np.random.shuffle(self.action_keys)
         self.quit_key = 'q'
         self.labeled_nodes = [(0,8.50), (1,7), (10,1.50), (11,2.25)] #node: price
-        np.random.sample(self.labeled_nodes)
-        self.n_price_ratings = 20
+        np.random.shuffle(self.labeled_nodes)
+        self.n_price_ratings = 5
         self.trigger_key = '5'
         self.test_familiarization = False
         self.text_color = [1]*3
@@ -87,9 +88,17 @@ class valueStructure:
         f.close()
          
     def writeData(self):
-        save_loc = os.path.join(self.save_dir,'RawData',self.datafilename)
+        # create taskdata object
+        taskdata = {
+                    'graph': self.graph,
+                    'action_keys': self.action_keys,
+                    'labeled_nodes': self.labeled_nodes
+                    }
+        # save data
+        save_loc = os.path.join(self.save_dir,self.datafilename)
         data = {}
         data['subcode']=self.subjid
+        data['taskdata'] = taskdata
         data['timestamp']=self.timestamp
         data['structuredata']=self.structuredata
         data['pricedata']=self.pricedata
@@ -313,19 +322,19 @@ class valueStructure:
                                              labels=('0','5','10'),
                                              stretch=1.5,
                                              pos=(0,-.6))
+            stim = trial.pop('stim')
             while ratingScale.noResponse:
                 if context:
                     for c in context:
                         c.draw()
-                trial['stim'].draw()
+                stim.draw()
                 ratingScale.draw()
                 self.win.flip()
-            rating = {}
-            rating['rating'] = ratingScale.getRating()
-            rating['rt'] = ratingScale.getRT()
-            rating['history'] = ratingScale.getHistory()
-            self.pricedata.append(rating)
-            self.writeToLog(json.dumps(rating))
+            trial['rating'] = ratingScale.getRating()
+            trial['rt'] = ratingScale.getRT()
+            trial['history'] = ratingScale.getHistory()
+            self.pricedata.append(trial)
+            self.writeToLog(json.dumps(trial))
         
     def run_task(self, pause_trials = None):
         self.setupWindow()
@@ -335,7 +344,8 @@ class valueStructure:
         initial_question = "How much does a non-alcoholic bottled drink cost on average?"
         textstim = visual.TextStim(self.win, initial_question, 
                                    pos=[0,.5], units='norm')
-        self.run_price_rating([{'stim': textstim}])
+        self.run_price_rating([{'stim': textstim,
+                                'exp_stage': 'initial_rating'}])
         
         # instructions
         self.presentInstruction(
@@ -364,11 +374,11 @@ class valueStructure:
                     Indicate whether the stimulus 
                     is unrotated or rotated.
                     
-                            Left Key: Unrotated
-                            Right Key: Rotated
+                            %s Key: Unrotated
+                            %s Key: Rotated
                             
                     Press 5 to continue...
-                    """)
+                    """ % (self.action_keys[0], self.action_keys[1]))
                 self.run_familiarization_test()
                 acc = np.mean([t['correct'] for t in self.structuredata 
                                if t['exp_stage'] == 'familiarization_test'])
@@ -393,14 +403,17 @@ class valueStructure:
             Finished with familiarization. In the next section, indicated
             whether the image is unrotated or rotated.
             
-                Left Key: Unrotated
-                Right Key: Rotated
+                %s Key: Unrotated
+                %s Key: Rotated
             
             Each logo will only come up on the screen for a short amount of time.
             Please respond as quickly and accurately as possible.
             
+            You will hear a beep if you choose incorrectly, and a higher beep
+            if you respond too slowly.
+            
             Press 5 to continue...
-            """)
+            """ % (self.action_keys[0], self.action_keys[1]))
         self.run_graph_learning()
         
         self.presentInstruction(
@@ -445,9 +458,13 @@ class valueStructure:
             unknown_stims+=sample(self.stim_files,len(self.stim_files))
         rating_trials = []
         for stim_file in unknown_stims:
-            stim_file = stim = visual.ImageStim(self.win, image=stim_file,
+            stim_i = self.stim_files.index(stim_file)
+            stim = visual.ImageStim(self.win, image=stim_file,
                                 units='norm', pos=(0,0))
-            trial = {'stim': stim}
+            trial = {'stim': stim,
+                     'stim_file': stim_file,
+                     'stim_index': stim_i,
+                     'exp_stage': 'price_rating'}
             rating_trials.append(trial)
         self.run_price_rating(rating_trials, labeled_banner)
         

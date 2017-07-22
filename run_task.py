@@ -1,18 +1,15 @@
-import igraph
-from glob import glob
 import numpy as np
 import os
-import subprocess
 from value_struture_task import valueStructure
-from utils import gen_trials, graph_from_dict
+from utils import gen_trials
 
 
 # ************Experiment Setup********************************
 # subject parameters
 subj = 'test'
-save_dir = os.path.join('Data',subj)
-n_structure_trials = 1400
-n_familiarization_trials = 30
+save_dir = os.path.join('Data','RawData')
+n_structure_trials = 40
+n_familiarization_trials = 20
 
 
 
@@ -51,20 +48,3 @@ task = valueStructure(subj, save_dir, stims, graph,
 task.run_task()
 
 
-"""
-# plot graph
-g = graph_from_dict(graph)
-layout = g.layout('kk')
-nodes = [i['stim_index'] for i in trials]
-for i,n in enumerate(nodes[0:300]):
-    g.vs["color"] = ['blue' if j == n else 'red' for j in range(15)]
-    igraph.plot(g, layout=layout, edge_curved=False,
-                target = 'graph_%s.png' % str(i).zfill(3))
-
-cmd = "convert -loop 0 -delay 15 *png Plots/%s.gif" % subj
-process = subprocess.Popen(cmd, shell=True)
-process.wait()
-for f in glob('*.png'):
-    os.remove(f)
-
-"""

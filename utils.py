@@ -1,4 +1,3 @@
-import igraph
 import numpy as np
 
 # **********HELPER FUNCTIONS ***********************************
@@ -32,9 +31,3 @@ def gen_trials(graph, stims, trial_count=100, duration=1.5, exp_stage=None,
         trials.append(trial)
     return trials
 
-def graph_from_dict(graph_dict):
-    g = igraph.Graph()
-    g.add_vertices(list(set(list(graph_dict.keys()) 
-                   + list([a for v in graph_dict.values() for a in v]))))
-    g.add_edges([(v, a) for v in graph_dict.keys() for a in graph_dict[v]])
-    return g
