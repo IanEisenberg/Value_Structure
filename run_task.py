@@ -7,7 +7,7 @@ from utils import gen_trials
 # ************Experiment Setup********************************
 # subject parameters
 subj = 'test'
-save_dir = os.path.join('Data','RawData')
+save_dir = os.path.join('Data')
 n_structure_trials = 1400
 n_familiarization_trials = 20
 

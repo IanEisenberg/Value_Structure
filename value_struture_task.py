@@ -46,7 +46,7 @@ class valueStructure:
         self.action_keys = ['left','right']
         np.random.shuffle(self.action_keys)
         self.quit_key = 'q'
-        self.labeled_nodes = [(0,8.50), (1,7), (10,1.50), (11,2.25)] #node: price
+        self.labeled_nodes = [(0,8.3), (1,7), (10,3.50), (11,4.2)] #node: price
         np.random.shuffle(self.labeled_nodes)
         self.n_price_ratings = 15
         self.trigger_key = '5'
@@ -55,7 +55,7 @@ class valueStructure:
         
         # set up window
         self.win=[]
-        self.window_dims=[800,600]
+        self.window_dims=[1920,1080]
         
         # set up recording files
         self.logfilename='%s_%s.log'%(self.subjid,self.timestamp)
@@ -77,7 +77,8 @@ class valueStructure:
         all of the same information as taskinfo)
         """
         init_dict = {k:self.__dict__[k] for k in self.__dict__.iterkeys() if k 
-                    not in ('clock', 'stimulusInfo', 'structuredata', 'bot', 'taskinfo','win')}
+                    not in ('clock', 'stimulusInfo', 
+                            'structuredata', 'bot', 'taskinfo','win')}
         return json.dumps(init_dict)
     
     def writeToLog(self,msg):
@@ -94,7 +95,7 @@ class valueStructure:
                     'labeled_nodes': self.labeled_nodes
                     }
         # save data
-        save_loc = os.path.join(self.save_dir,self.datafilename)
+        save_loc = os.path.join(self.save_dir,'RawData',self.datafilename)
         data = {}
         data['subcode']=self.subjid
         data['taskdata'] = taskdata
@@ -102,10 +103,10 @@ class valueStructure:
         data['structuredata']=self.structuredata
         data['pricedata']=self.pricedata
         try:
-            f=open(save_loc,'w')
+            f=open(save_loc,'wb')
         except IOError:
             os.makedirs(os.path.split(save_loc)[0])
-            f=open(save_loc,'w')
+            f=open(save_loc,'wb')
         cPickle.dump(data,f)
     
     #**************************************************************************
@@ -123,6 +124,9 @@ class valueStructure:
         self.win.flip()
         self.win.flip()
         
+        # set up ratio for squares/cricles
+        stim_ratio = float(self.win.size[0])/self.win.size[1]
+        self.stim_size = np.array([.3, stim_ratio*.3])
         
     def presentTextToWindow(self,text,size=.15, duration=None):
         """ present a text message to the screen
@@ -187,56 +191,88 @@ class valueStructure:
         self.closeWindow()
         sys.exit()
     
-    def get_labeled_banner(self, labeled_stims):
-        positions = [-.6,-.2,.2,.6]
+    def get_labeled_banner(self, labeled_stims, positions, height, price=True):
         prices = [i[1] for i in self.labeled_nodes]
         banner = []
         for i, stim_file in enumerate(labeled_stims):
             # logo
             stim = visual.ImageStim(self.win, image=stim_file,
                                 units='norm', 
-                                pos=(positions[i],.7))
+                                pos=(positions[i],height),
+                                size=self.stim_size*.6)
             banner.append(stim)
-            # price
-            pricestim = visual.TextStim(self.win, '$%s' % prices[i], 
-                                       pos=(positions[i],.4), units='norm')
-            banner.append(pricestim)
+            if price:
+                # price
+                pricestim = visual.TextStim(self.win, '%s RMB' % prices[i], 
+                                           pos=(positions[i],height-.3), 
+                                           units='norm')
+                banner.append(pricestim)
         return banner
-            
-            
+
+    def place_labeled_stims(self, labeled_stims, scale):        
+        # figure out position of shapes
+        pos_limits = np.array([-.3,.3])*scale.stretch
+        limits = [scale.low, scale.high]
+        prices = [i[1] for i in self.labeled_nodes]
+        banner = []
+        for i, stim_file in enumerate(labeled_stims):
+            # logo
+            stim_pos = float(prices[i]-limits[0])/(limits[1]-limits[0])
+            stim_pos = stim_pos*pos_limits[1]+(1-stim_pos)*pos_limits[0]
+            stim = visual.ImageStim(self.win, image=stim_file,
+                                units='norm', 
+                                pos=(stim_pos,
+                                     scale.pos[1]+.16),
+                                size=self.stim_size*.3)
+            banner.append(stim)
+        return banner
+    
     def presentInstruction(self, text):
-        self.presentTextToWindow(text, size = .1)
+        self.presentTextToWindow(text, size = .07)
         resp,self.startTime=self.waitForKeypress(self.trigger_key)
         self.checkRespForQuitKey(resp)
         event.clearEvents()
         
-    def presentStim(self, stim_file, rotation, textstim=None, duration=None):
+    def presentStim(self, stim_file, rotation, textstim=None, duration=None,
+                    correct_choice=None):
+        error_sound = sound.Sound(secs=.1,value=500)
+        size = self.stim_size
+        # present stim
+        if rotation==90:
+            size = size[::-1]
         stim = visual.ImageStim(self.win, 
                                 image=stim_file,
                                 ori=rotation,
-                                units='deg')
+                                units='norm',
+                                size = size)
         stim.draw()
         if textstim:
             textstim.draw()
-        
         self.win.flip()
-        
+        # get response
         recorded_keys = []
         stim_clock = core.Clock()
         if duration:
             while stim_clock.getTime() < duration:
                 keys = event.getKeys(self.action_keys + [self.quit_key],
-                                     timeStamped=True)
+                                     timeStamped=stim_clock)
                 for key,response_time in keys:
                     self.checkRespForQuitKey(key)
+                    if correct_choice:
+                        if key!=correct_choice and len(recorded_keys)==0:
+                            error_sound.play()
                     recorded_keys+=keys
         else:
             while len(recorded_keys) == 0:
                 keys = event.getKeys(self.action_keys + [self.quit_key],
-                                     timeStamped=True)
+                                     timeStamped=stim_clock)
                 for key,response_time in keys:
                     self.checkRespForQuitKey(key)
+                    if correct_choice:
+                        if key!=correct_choice and len(recorded_keys)==0:
+                            error_sound.play()
                     recorded_keys+=keys
+                    
         return recorded_keys
         
     def presentTrial(self, trial):
@@ -248,17 +284,19 @@ class valueStructure:
         trialClock = core.Clock()
         self.trialnum += 1
         trial['onset']=core.getTime() - self.startTime
-        trial['response'] = 999
-        trial['rt'] = 999
+        trial['response'] = -1
+        trial['rt'] = -1
         trial['secondary_responses'] = []
         trial['secondary_rts'] = []
         trial['correct'] = False
+        correct_choice = self.action_keys[[0,90].index(trial['rotation'])]
         # present stimulus and get response
         event.clearEvents()
         trialClock.reset()
         keys = self.presentStim(trial['stim_file'], 
                                 trial['rotation'],
-                                duration = trial['duration'])
+                                duration = trial['duration'],
+                                correct_choice=correct_choice)
         if len(keys)>0:
             first_key = keys[0]
             choice = ['unrot','rot'][self.action_keys.index(first_key[0])]
@@ -268,21 +306,11 @@ class valueStructure:
             # record any responses after the first
             trial['secondary_responses']=[i[0] for i in keys[1:]]
             trial['secondary_rts']=[i[1] for i in keys[1:]]
-            # get feedback and update tracker
-            correct_choice = ['unrot','rot'][[0,90].index(trial['rotation'])]
-            if correct_choice == choice:
+            if correct_choice == first_key:
                 trial['correct']=True
                 # record points for bonus
                 self.pointtracker += 1
-            else:
-                error_sound = sound.Sound(secs=.1,value=500)
-                error_sound.play() 
-        # If subject did not respond within the stimulus window clear the stim
-        # and admonish the subject
-        if trial['rt']==999:
-            miss_sound = sound.Sound(secs=.1,value=1000)
-            miss_sound.play() 
-            
+                
         # log trial and add to data
         self.writeToLog(json.dumps(trial))
         self.structuredata.append(trial)
@@ -308,26 +336,41 @@ class valueStructure:
             self.presentTrial(trial)
                             
     def run_graph_learning(self):
+        pause_trials = (len(self.trials)/3, len(self.trials)/3*2)
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
-        for trial in self.trials:
+        for i,trial in enumerate(self.trials):
             self.presentTrial(trial)
-    
-    def run_price_rating(self, trials, context=None):
+            if i in pause_trials:
+                self.presentInstruction(
+                        """
+                        Take a break!
+                                        
+                        Press 5 when you are ready to continue
+                        """)
+        
+    def run_price_rating(self, trials, labeled_stims=None):
         for trial in trials:
-            ratingScale = visual.RatingScale(self.win, low=0, high=10,
+            labeled_points=None
+            ratingScale = visual.RatingScale(self.win, low=2, high=10,
                                              precision=10,
-                                             scale='Cost in RMB',
-                                             labels=('0','5','10'),
-                                             stretch=1.5,
-                                             pos=(0,-.6))
+                                             scale='',
+                                             labels=('2','6','10'),
+                                             stretch=2,
+                                             pos=(0,-.5),
+                                             markerColor='white')
+            if labeled_stims:
+                labeled_points = self.place_labeled_stims(labeled_stims,
+                                                          ratingScale)
+        
             stim = trial.pop('stim')
             while ratingScale.noResponse:
-                if context:
-                    for c in context:
-                        c.draw()
                 stim.draw()
                 ratingScale.draw()
+                if labeled_points:
+                    for p in labeled_points:
+                        p.draw()
+                        
                 self.win.flip()
             trial['rating'] = ratingScale.getRating()
             trial['rt'] = ratingScale.getRT()
@@ -340,19 +383,20 @@ class valueStructure:
         
         self.presentInstruction('Welcome! Press 5 to continue...')
         #initial price guess
-        initial_question = "How much does a non-alcoholic bottled drink cost on average?"
+        initial_question = "How much does a non-alcoholic bottled drink cost on average in RMB?"
         textstim = visual.TextStim(self.win, initial_question, 
-                                   pos=[0,.5], units='norm')
+                                   pos=[0,.3], units='norm')
         self.run_price_rating([{'stim': textstim,
                                 'exp_stage': 'initial_rating'}])
         
         # instructions
         self.presentInstruction(
             """
-            In the first part of this study,
-            logos for different drinks will be shown one at a time for 
-            a short amount of time. These logos are made up, but are associated
-            with real drinks that have been set behind the scenes.
+            In the first part of this study, logos for different 
+            drinks will be shown one at a time for a short 
+            amount of time. These logos are made up, but 
+            are associated with real drinks that have 
+            been set at the beginning of the experiment.
             
             Your first task is to indicated whether 
             the logo is rotated or unrotated.
@@ -370,8 +414,7 @@ class valueStructure:
                 self.presentInstruction(
                     """
                     We will now practice responding to the stimuli. 
-                    Indicate whether the stimulus 
-                    is unrotated or rotated.
+                    Indicate whether the stimulus is unrotated or rotated.
                     
                             %s Key: Unrotated
                             %s Key: Rotated
@@ -381,7 +424,6 @@ class valueStructure:
                 self.run_familiarization_test()
                 acc = np.mean([t['correct'] for t in self.structuredata 
                                if t['exp_stage'] == 'familiarization_test'])
-                print(acc)
                 if acc>.75:
                     learned=True
                 else:
@@ -399,17 +441,19 @@ class valueStructure:
         # structure learning 
         self.presentInstruction(
             """
-            Finished with familiarization. In the next section, indicated
-            whether the image is unrotated or rotated.
+            Finished with familiarization. In the next section, 
+            indicated whether the image is unrotated or rotated.
             
                 %s Key: Unrotated
                 %s Key: Rotated
             
-            Each logo will only come up on the screen for a short amount of time.
-            Please respond as quickly and accurately as possible.
+            Each logo will only come up on the screen for a short 
+            amount of time. Please respond as quickly and accurately 
+            as possible.
             
-            You will hear a beep if you choose incorrectly, and a higher beep
-            if you respond too slowly.
+            You will hear a beep if you choose incorrectly.
+            This section takes a long time, so there will be two
+            breaks.
             
             Press 5 to continue...
             """ % (self.action_keys[0], self.action_keys[1]))
@@ -419,9 +463,10 @@ class valueStructure:
             """
             Finished with that section. Take a break!
             
-            In the next section we will ask you to guess the price of the
-            different drinks. We will tell you the price of 4 different drinks
-            (represented by the logos) first.
+            In the next section we will ask you to guess the 
+            price of the different drinks. We will tell you the 
+            price of 4 different drinks (represented by the logos) 
+            first.
             
             When you are ready, press 5 to continue...
             """)
@@ -429,9 +474,10 @@ class valueStructure:
         # labeling phase
         label_instruction = visual.TextStim(self.win, 
                                             "Above are the prices of 4 drinks",
-                                            pos=[0,-.1], units='norm')
+                                            pos=[0,-.3], units='norm')
         labeled_stims = [self.stim_files[i[0]] for i in self.labeled_nodes]
-        labeled_banner = self.get_labeled_banner(labeled_stims)
+        labeled_banner = self.get_labeled_banner(labeled_stims,
+                                                 [-.6,-.2,.2,.6], .4)
         for c in labeled_banner:
             c.draw()
         label_instruction.draw()
@@ -440,13 +486,15 @@ class valueStructure:
         
         self.presentInstruction(
             """
-            Now you will see the remaining logos. Please indicate the price
-            you think the drink associated with each logo costs in the market.
+            Now you will see the remaining logos. Please 
+            indicate the price you think the drink associated 
+            with each logo costs in the market.
             You will rate each logo multiple times.
             
-            At the end of the experiment, if the average of your
-            estimates for one drink is less
-            than 1 RMB from the true value, you will earn 10 RMB.
+            At the end of the experiment, we will select 
+            one of your ratings. If your guess was less 
+            than 1 RMB from the true value for the drink
+            associated with that logo, you will earn 10 RMB.
             
             Press 5 to continue...
             """)
@@ -459,19 +507,23 @@ class valueStructure:
         for stim_file in unknown_stims:
             stim_i = self.stim_files.index(stim_file)
             stim = visual.ImageStim(self.win, image=stim_file,
-                                units='norm', pos=(0,0))
+                                units='norm', pos=(0,.2),
+                                size=self.stim_size)
             trial = {'stim': stim,
                      'stim_file': stim_file,
                      'stim_index': stim_i,
                      'exp_stage': 'price_rating'}
             rating_trials.append(trial)
-        self.run_price_rating(rating_trials, labeled_banner)
+        self.run_price_rating(rating_trials, labeled_stims)
+        
+        # randomly choose a trial
+        selected_rating = np.random.choice(self.pricedata[1:])
         
         # clean up and save
         self.writeData()
         self.presentTextToWindow('Thank you. Please wait for the experimenter',
-                                 size=.05)
+                                 size=.1)
         self.waitForKeypress(self.quit_key)
         self.closeWindow()
-
+        return selected_rating
 
