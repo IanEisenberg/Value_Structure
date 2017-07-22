@@ -10,6 +10,7 @@ taskdata = {}
 communities = {0: [0,1,2,3,4],
               1: [5,6,7,8,9],
               2: [10,11,12,13,14]}
+node_lookup = {i:k for k,v in communities.items() for i in v }
 
 for filey in sorted(glob('Data/RawData/*')):
     subj = path.basename(filey).split('_')[0]
@@ -23,6 +24,11 @@ for filey in sorted(glob('Data/RawData/*')):
     n_repeats = (len(subj_pricedata)-1)//n_stim
     repeat_array = np.hstack([[i]*n_stim for i in range(1, n_repeats+1)])
     subj_pricedata.loc[1:, 'stim_repetition'] = repeat_array
+    # node values
+    node_values = dict(data['taskdata']['labeled_nodes'])
+    price_labels = subj_pricedata.stim_index. \
+                    apply(lambda x: node_values.get(x,np.nan))
+    subj_pricedata.loc[:,'labeled_price'] = price_labels
     # concatenate with group
     structuredata.append(subj_structuredata)
     pricedata.append(subj_pricedata)

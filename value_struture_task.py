@@ -14,7 +14,6 @@ import cPickle
 import datetime
 import json
 import numpy as np
-import pandas as pd
 from psychopy import visual, core, event, sound
 from random import sample
 import sys,os
@@ -49,7 +48,7 @@ class valueStructure:
         self.quit_key = 'q'
         self.labeled_nodes = [(0,8.50), (1,7), (10,1.50), (11,2.25)] #node: price
         np.random.shuffle(self.labeled_nodes)
-        self.n_price_ratings = 5
+        self.n_price_ratings = 15
         self.trigger_key = '5'
         self.test_familiarization = False
         self.text_color = [1]*3
