@@ -1,6 +1,7 @@
 import cPickle
 from glob import glob
 import numpy as np
+from numpy import log
 from os import path
 import pandas as pd
 
@@ -21,6 +22,7 @@ for filey in sorted(glob('Data/RawData/*pkl')):
     subj_pricedata = pd.DataFrame(data['pricedata'])
     subj_pricedata.loc[:,'subjid'] = subj
     # add subject specific variables
+    subj_structuredata.loc[:,'correct_shift'] = subj_structuredata.correct.shift()
     n_stim = int(np.max(subj_pricedata.stim_index)+1)
     n_repeats = (len(subj_pricedata)-1)//n_stim
     repeat_array = np.hstack([[i]*n_stim for i in range(1, n_repeats+1)])
@@ -78,6 +80,15 @@ cPickle.dump(taskdata,open(path.join(save_loc,'taskdata.pkl'),'wb'))
 # **********Analysis*********************************
 import statsmodels.formula.api as smf
 data = structuredata[1:].query('rt!=-1')
-rs = smf.mixedlm("rt ~ community_cross + steps_since_seen", 
-                 data, groups=data["subjid"])
 
+models = {}
+for DV in ['rt', 'np.log(rt)']:
+    rs = smf.mixedlm("%s ~ community_cross + steps_since_seen" % DV, 
+                     data, groups=data["subjid"])
+    # larger model
+    rs_full = smf.mixedlm("%s ~ community_cross + steps_since_seen \
+                          + correct_shift + C(rotation)" % DV, 
+                     data, groups=data["subjid"])
+    DV_name = DV[-7:]
+    models[DV_name] = rs
+    models[DV_name + '_full'] = rs_full
