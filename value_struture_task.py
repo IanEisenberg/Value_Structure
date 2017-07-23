@@ -48,7 +48,7 @@ class valueStructure:
         self.quit_key = 'q'
         self.labeled_nodes = [(0,8.3), (1,7), (10,3.50), (11,4.2)] #node: price
         np.random.shuffle(self.labeled_nodes)
-        self.n_price_ratings = 15
+        self.n_price_ratings = 12
         self.trigger_key = '5'
         self.test_familiarization = False
         self.text_color = [1]*3
@@ -306,7 +306,7 @@ class valueStructure:
             # record any responses after the first
             trial['secondary_responses']=[i[0] for i in keys[1:]]
             trial['secondary_rts']=[i[1] for i in keys[1:]]
-            if correct_choice == first_key:
+            if correct_choice == first_key[0]:
                 trial['correct']=True
                 # record points for bonus
                 self.pointtracker += 1
@@ -501,8 +501,9 @@ class valueStructure:
         
         # price rating phase
         unknown_stims = []
+        rating_stims = self.stim_files[2,4,5,7,9,12,14]
         for rep in range(self.n_price_ratings):
-            unknown_stims+=sample(self.stim_files,len(self.stim_files))
+            unknown_stims+=sample(rating_stims,len(rating_stims))
         rating_trials = []
         for stim_file in unknown_stims:
             stim_i = self.stim_files.index(stim_file)

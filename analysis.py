@@ -12,7 +12,7 @@ communities = {0: [0,1,2,3,4],
               2: [10,11,12,13,14]}
 node_lookup = {i:k for k,v in communities.items() for i in v }
 
-for filey in sorted(glob('Data/RawData/*22_13*pkl')):
+for filey in sorted(glob('Data/RawData/*pkl')):
     subj = path.basename(filey).split('_')[0]
     data = cPickle.load(open(filey,'rb'))
     subj_structuredata = pd.DataFrame(data['structuredata'])
