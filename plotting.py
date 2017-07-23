@@ -1,6 +1,7 @@
 from os import path
 import pandas as pd
 import seaborn as sns
+from utils import get_node_colors
 
 # load data
 data_loc = path.join('Data','ProcessedData')
@@ -32,16 +33,7 @@ pricedata.loc[:,'avg_community_price'] = \
         lambda x: pricedata.groupby('community').\
         labeled_price.mean()[x])
 
-c_colors = [[.8,0,.2], [0,.8,.4], [0,.1,1]]
-colors = [c_colors[0]]*5 + [c_colors[1]]*5 + [c_colors[2]]*5
-colors[0] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[2])]
-colors[4] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[1])]
-colors[5] = [i*.7+y*.3 for i,y in zip(c_colors[1],c_colors[0])]
-colors[9] = [i*.7+y*.3 for i,y in zip(c_colors[1],c_colors[2])]
-colors[10] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[1])]
-colors[14] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[0])]
-sns.palplot(colors)
-
+colors = get_node_colors()
 for group in pricedata.groupby('stim_index'):
     stim_i = int(group[0])
     subset = group[1]

@@ -4,6 +4,7 @@ import numpy as np
 from os import path
 import pandas as pd
 
+# **********Processing*********************************
 structuredata = []
 pricedata = []
 taskdata = {}
@@ -52,10 +53,31 @@ for cross in structuredata.community_cross:
         steps=1
     steps_in_community.append(steps)
 structuredata.loc[:,'steps_within_community'] = steps_in_community
+# trials since last seen
+steps_since_seen = []
+last_seen = {}
 # ...for price data
+for i, stim in enumerate(structuredata.stim_index):
+    if stim in last_seen.keys():
+        steps_since = i-last_seen[stim]
+    else:
+        steps_since = 0
+    last_seen[stim] = i
+    steps_since_seen.append(steps_since)
+structuredata.loc[:,'steps_since_seen'] = steps_since_seen  
+
+
 pricedata.loc[1:,'community'] = pricedata.stim_index[1:].apply(f)
 
 # save data
 save_loc = path.join('Data','ProcessedData')
 structuredata.to_csv(path.join(save_loc, 'structuredata.csv'))
 pricedata.to_csv(path.join(save_loc, 'pricedata.csv'))
+cPickle.dump(taskdata,open(path.join(save_loc,'taskdata.pkl'),'wb'))
+
+# **********Analysis*********************************
+import statsmodels.formula.api as smf
+data = structuredata[1:].query('rt!=-1')
+rs = smf.mixedlm("rt ~ community_cross + steps_since_seen", 
+                 data, groups=data["subjid"])
+

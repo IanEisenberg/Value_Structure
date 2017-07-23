@@ -46,7 +46,7 @@ class valueStructure:
         self.action_keys = ['left','right']
         np.random.shuffle(self.action_keys)
         self.quit_key = 'q'
-        self.labeled_nodes = [(0,8.3), (1,7), (10,3.50), (11,4.2)] #node: price
+        self.labeled_nodes = [(0,9.3), (1,8), (10,3.50), (11,4.2)] #node: price
         np.random.shuffle(self.labeled_nodes)
         self.n_price_ratings = 12
         self.trigger_key = '5'
@@ -319,8 +319,9 @@ class valueStructure:
     
     def run_familiarization(self):
         i=0
-        while i<len(self.stim_files)*2:
-            filey = self.stim_files[i//2]
+        stims = sample(self.stim_files, len(self.stim_files))
+        while i<len(stims)*2:
+            filey = stims[i//2]
             text = ['Unrotated','Rotated'][i%2==1]
             textstim = visual.TextStim(self.win, text, pos=[0,.5], units='norm')
             keys = self.presentStim(filey, [0,90][i%2==1], textstim)
@@ -501,7 +502,7 @@ class valueStructure:
         
         # price rating phase
         unknown_stims = []
-        rating_stims = self.stim_files[2,4,5,7,9,12,14]
+        rating_stims = [self.stim_files[i] for i in [2,4,5,7,9,12,14]]
         for rep in range(self.n_price_ratings):
             unknown_stims+=sample(rating_stims,len(rating_stims))
         rating_trials = []
