@@ -36,8 +36,8 @@ graph = {0: [1,2,3,14],
 # create value graph
 scaling = 10
 np.random.seed(2222)
-seeds = {0:.9,1:1,10:.2,11:.05}
-values = create_value_graph(graph, seeds, weight=.97, steps = 10000)
+seeds = {2:.9,1:1,11:.1,12:.01}
+values = create_value_graph(graph, seeds, weight=.99, steps = 3000)
 values = {k:v*scaling for k,v in values.items()}
 
 # set up trials
@@ -50,7 +50,7 @@ trials = gen_trials(graph, stims, n_structure_trials,
                     exp_stage='structure_learning')
 
 # start task
-task = valueStructure(subj, save_dir, stims, graph, values, seeds.keys(),
+task = valueStructure(subj, save_dir, stims, graph, values, [0,1,10,11],
                       trials, familiarization_trials, False)
 win = task.run_task()
 
