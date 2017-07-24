@@ -24,12 +24,10 @@ def graph_from_judgments(value_graph):
     return g
 
 
-
 # load data
 data_loc = path.join('Data','ProcessedData')
 structuredata = pd.read_csv(path.join(data_loc, 'structuredata.csv'))
 taskdata = cPickle.load(open(path.join(data_loc,'taskdata.pkl'),'rb'))
-
 
 # visual style for graphs
 visual_style = {}

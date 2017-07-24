@@ -6,7 +6,7 @@ from utils import create_value_graph, gen_trials
 
 # ************Experiment Setup********************************
 # subject parameters
-subj = 'test'
+subj = raw_input('subject id: ')
 save_dir = os.path.join('Data')
 n_structure_trials = 1000
 n_familiarization_trials = 20
