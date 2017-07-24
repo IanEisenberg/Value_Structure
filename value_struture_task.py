@@ -239,8 +239,8 @@ class valueStructure:
             positions.append(stim_pos)
         return banner
     
-    def presentInstruction(self, text):
-        self.presentTextToWindow(text, size = .07)
+    def presentInstruction(self, text, size=.07):
+        self.presentTextToWindow(text, size = size)
         resp,self.startTime=self.waitForKeypress(self.trigger_key)
         self.checkRespForQuitKey(resp)
         event.clearEvents()
@@ -514,12 +514,14 @@ class valueStructure:
             that drawn amount (not your original bid), and also get the
             value of the stimulus.
             
-            At the end of the experiment you will be paid the
-            combination of your original 10 RMB and the results of the 
-            bid. Thus you can potentially leave with 0-20 RMB
+            At the end of the experiment three people will be
+            randomly selected to be paid. If selected,
+            you will be paid the combination of your original 
+            10 RMB and the results of the 
+            bid. Thus you can earn 0-20 RMB.
             
             Press 5 to continue...
-            """)
+            """, size=.06)
         
         # value rating phase
         unknown_stims = []
