@@ -45,6 +45,6 @@ trials = gen_trials(graph, stims, n_structure_trials,
 # start task
 task = valueStructure(subj, save_dir, stims, graph,
                       trials, familiarization_trials, False)
-task.run_task()
+win = task.run_task()
 
 

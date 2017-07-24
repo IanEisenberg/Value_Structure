@@ -7,7 +7,7 @@ import pandas as pd
 
 # **********Processing*********************************
 structuredata = []
-pricedata = []
+valuedata = []
 taskdata = {}
 communities = {0: [0,1,2,3,4],
               1: [5,6,7,8,9],
@@ -19,26 +19,26 @@ for filey in sorted(glob('Data/RawData/*pkl')):
     data = cPickle.load(open(filey,'rb'))
     subj_structuredata = pd.DataFrame(data['structuredata'])
     subj_structuredata.loc[:,'subjid'] = subj
-    subj_pricedata = pd.DataFrame(data['pricedata'])
-    subj_pricedata.loc[:,'subjid'] = subj
+    subj_valuedata = pd.DataFrame(data['valuedata'])
+    subj_valuedata.loc[:,'subjid'] = subj
     # add subject specific variables
     subj_structuredata.loc[:,'correct_shift'] = subj_structuredata.correct.shift()
-    n_stim = int(np.max(subj_pricedata.stim_index)+1)
-    n_repeats = (len(subj_pricedata)-1)//n_stim
+    n_stim = int(np.max(subj_valuedata.stim_index)+1)
+    n_repeats = (len(subj_valuedata)-1)//n_stim
     repeat_array = np.hstack([[i]*n_stim for i in range(1, n_repeats+1)])
-    subj_pricedata.loc[1:, 'stim_repetition'] = repeat_array
+    subj_valuedata.loc[:, 'stim_repetition'] = repeat_array
     # node values
     node_values = dict(data['taskdata']['labeled_nodes'])
-    price_labels = subj_pricedata.stim_index. \
+    value_labels = subj_valuedata.stim_index. \
                     apply(lambda x: node_values.get(x,np.nan))
-    subj_pricedata.loc[:,'labeled_price'] = price_labels
+    subj_valuedata.loc[:,'labeled_value'] = value_labels
     # concatenate with group
     structuredata.append(subj_structuredata)
-    pricedata.append(subj_pricedata)
+    valuedata.append(subj_valuedata)
     taskdata[subj] = data['taskdata']
 
 structuredata = pd.concat(structuredata, axis=0)
-pricedata = pd.concat(pricedata, axis=0)
+valuedata = pd.concat(valuedata, axis=0)
 
 # add community columns
 # ... for structure data
@@ -58,7 +58,7 @@ structuredata.loc[:,'steps_within_community'] = steps_in_community
 # trials since last seen
 steps_since_seen = []
 last_seen = {}
-# ...for price data
+# ...for value data
 for i, stim in enumerate(structuredata.stim_index):
     if stim in last_seen.keys():
         steps_since = i-last_seen[stim]
@@ -69,12 +69,12 @@ for i, stim in enumerate(structuredata.stim_index):
 structuredata.loc[:,'steps_since_seen'] = steps_since_seen  
 
 
-pricedata.loc[1:,'community'] = pricedata.stim_index[1:].apply(f)
+valuedata.loc[1:,'community'] = valuedata.stim_index.apply(f)
 
 # save data
 save_loc = path.join('Data','ProcessedData')
 structuredata.to_csv(path.join(save_loc, 'structuredata.csv'))
-pricedata.to_csv(path.join(save_loc, 'pricedata.csv'))
+valuedata.to_csv(path.join(save_loc, 'valuedata.csv'))
 cPickle.dump(taskdata,open(path.join(save_loc,'taskdata.pkl'),'wb'))
 
 # **********Analysis*********************************

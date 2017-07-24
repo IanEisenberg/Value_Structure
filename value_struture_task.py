@@ -25,7 +25,7 @@ class valueStructure:
     def __init__(self,subjid, save_dir, stim_files, graph,
                  trials, familiarization_trials, fullscreen = False):
         # set up "holder" variables
-        self.pricedata=[]
+        self.valuedata=[]
         self.structuredata=[]  
         self.pointtracker=0
         self.startTime=[]
@@ -46,9 +46,10 @@ class valueStructure:
         self.action_keys = ['left','right']
         np.random.shuffle(self.action_keys)
         self.quit_key = 'q'
-        self.labeled_nodes = [(0,9.3), (1,8), (10,3.50), (11,4.2)] #node: price
-        np.random.shuffle(self.labeled_nodes)
-        self.n_price_ratings = 12
+        self.node_values = np.round(sample(np.linspace(0,10,15),15),1)
+        self.labeled_nodes = [0,1,10,11]
+        self.node_values[self.labeled_nodes] = [9.3,8,2.5,1.2]
+        self.n_value_ratings = 12
         self.trigger_key = '5'
         self.test_familiarization = False
         self.text_color = [1]*3
@@ -78,7 +79,8 @@ class valueStructure:
         """
         init_dict = {k:self.__dict__[k] for k in self.__dict__.iterkeys() if k 
                     not in ('clock', 'stimulusInfo', 
-                            'structuredata', 'bot', 'taskinfo','win')}
+                            'structuredata', 'bot', 'taskinfo','win',
+                            'node_values')}
         return json.dumps(init_dict)
     
     def writeToLog(self,msg):
@@ -92,7 +94,8 @@ class valueStructure:
         taskdata = {
                     'graph': self.graph,
                     'action_keys': self.action_keys,
-                    'labeled_nodes': self.labeled_nodes
+                    'labeled_nodes': self.labeled_nodes,
+                    'node_values': list(self.node_values)
                     }
         # save data
         save_loc = os.path.join(self.save_dir,'RawData',self.datafilename)
@@ -101,7 +104,7 @@ class valueStructure:
         data['taskdata'] = taskdata
         data['timestamp']=self.timestamp
         data['structuredata']=self.structuredata
-        data['pricedata']=self.pricedata
+        data['valuedata']=self.valuedata
         try:
             f=open(save_loc,'wb')
         except IOError:
@@ -191,33 +194,34 @@ class valueStructure:
         self.closeWindow()
         sys.exit()
     
-    def get_labeled_banner(self, labeled_stims, positions, height, price=True):
-        prices = [i[1] for i in self.labeled_nodes]
+    def get_labeled_banner(self, labeled_stims, positions, height, value=True):
         banner = []
-        for i, stim_file in enumerate(labeled_stims):
+        labeled_stims = sample(labeled_stims, len(labeled_stims))
+        for i, labeled_stim in enumerate(labeled_stims):
+            stim_file, value = labeled_stim
             # logo
             stim = visual.ImageStim(self.win, image=stim_file,
                                 units='norm', 
                                 pos=(positions[i],height),
                                 size=self.stim_size*.6)
             banner.append(stim)
-            if price:
-                # price
-                pricestim = visual.TextStim(self.win, '%s RMB' % prices[i], 
+            if value:
+                # value
+                valuestim = visual.TextStim(self.win, '%s RMB' % value, 
                                            pos=(positions[i],height-.3), 
                                            units='norm')
-                banner.append(pricestim)
+                banner.append(valuestim)
         return banner
 
     def place_labeled_stims(self, labeled_stims, scale):        
         # figure out position of shapes
         pos_limits = np.array([-.3,.3])*scale.stretch
         limits = [scale.low, scale.high]
-        prices = [i[1] for i in self.labeled_nodes]
         banner = []
-        for i, stim_file in enumerate(labeled_stims):
+        for i, labeled_stim in enumerate(labeled_stims):
+            stim_file, value = labeled_stim
             # logo
-            stim_pos = float(prices[i]-limits[0])/(limits[1]-limits[0])
+            stim_pos = float(value-limits[0])/(limits[1]-limits[0])
             stim_pos = stim_pos*pos_limits[1]+(1-stim_pos)*pos_limits[0]
             stim = visual.ImageStim(self.win, image=stim_file,
                                 units='norm', 
@@ -350,13 +354,13 @@ class valueStructure:
                         Press 5 when you are ready to continue
                         """)
         
-    def run_price_rating(self, trials, labeled_stims=None):
+    def run_value_rating(self, trials, labeled_stims=None):
         for trial in trials:
             labeled_points=None
-            ratingScale = visual.RatingScale(self.win, low=2, high=10,
+            ratingScale = visual.RatingScale(self.win, low=0, high=10,
                                              precision=10,
                                              scale='',
-                                             labels=('2','6','10'),
+                                             labels=('0','5','10'),
                                              stretch=2,
                                              pos=(0,-.5),
                                              markerColor='white')
@@ -376,34 +380,27 @@ class valueStructure:
             trial['rating'] = ratingScale.getRating()
             trial['rt'] = ratingScale.getRT()
             trial['history'] = ratingScale.getHistory()
-            self.pricedata.append(trial)
+            self.valuedata.append(trial)
             self.writeToLog(json.dumps(trial))
         
     def run_task(self, pause_trials = None):
         self.setupWindow()
         
         self.presentInstruction('Welcome! Press 5 to continue...')
-        #initial price guess
-        initial_question = "How much does a non-alcoholic bottled drink cost on average in RMB?"
-        textstim = visual.TextStim(self.win, initial_question, 
-                                   pos=[0,.3], units='norm')
-        self.run_price_rating([{'stim': textstim,
-                                'exp_stage': 'initial_rating'}])
         
         # instructions
         self.presentInstruction(
             """
-            In the first part of this study, logos for different 
-            drinks will be shown one at a time for a short 
-            amount of time. These logos are made up, but 
-            are associated with real drinks that have 
-            been set at the beginning of the experiment.
+            In the first part of this study, stimuli
+            will be shown one at a time for a short 
+            amount of time. Each stimulus is associated
+            with a different value between 0 RMB and 10 RMB.
             
             Your first task is to indicated whether 
-            the logo is rotated or unrotated.
+            each stimulus is rotated or unrotated.
             
-            We will start by familiarizing you with the logos. 
-            Press the left and right keys to move through the logos.
+            We will start by familiarizing you with the stimuli. 
+            Press the left and right keys to move through the stimuli.
             
             Press 5 to continue...
             """)
@@ -443,7 +440,7 @@ class valueStructure:
         self.presentInstruction(
             """
             Finished with familiarization. In the next section, 
-            indicated whether the image is unrotated or rotated.
+            indicated whether the stimulus is unrotated or rotated.
             
                 %s Key: Unrotated
                 %s Key: Rotated
@@ -464,19 +461,20 @@ class valueStructure:
             """
             Finished with that section. Take a break!
             
-            In the next section we will ask you to guess the 
-            price of the different drinks. We will tell you the 
-            price of 4 different drinks (represented by the logos) 
-            first.
+            In the next section we will ask you to bid on the
+            different stimuli (we will explain how to bid
+            on the next screen). First, we will tell you the 
+            value of 4 of the stimuli.
             
             When you are ready, press 5 to continue...
             """)
         
         # labeling phase
         label_instruction = visual.TextStim(self.win, 
-                                            "Above are the prices of 4 drinks",
+                                            "Above are the values of 4 stimuli",
                                             pos=[0,-.3], units='norm')
-        labeled_stims = [self.stim_files[i[0]] for i in self.labeled_nodes]
+        labeled_stims = [(self.stim_files[i],self.node_values[i]) 
+                         for i in self.labeled_nodes]
         labeled_banner = self.get_labeled_banner(labeled_stims,
                                                  [-.6,-.2,.2,.6], .4)
         for c in labeled_banner:
@@ -487,23 +485,32 @@ class valueStructure:
         
         self.presentInstruction(
             """
-            Now you will see the remaining logos. Please 
-            indicate the price you think the drink associated 
-            with each logo costs in the market.
-            You will rate each logo multiple times.
+            We will now start the bidding. You will start with 10 RMB,
+            which you can use to bid. Remember that each stimulus is 
+            associated with a value between 0 RMB and 10 RMB.
             
-            At the end of the experiment, we will select 
-            one of your ratings. If your guess was less 
-            than 1 RMB from the true value for the drink
-            associated with that logo, you will earn 10 RMB.
+            Bidding works by stating a value between 0 RMB
+            and 10 RMB that you are willing to pay for a stimulus. 
+            At the end of the study, one trial will be
+            randomly chosen. Once chosen, a random number between
+            0-10 will be chosen. If that number is above your bid,
+            you will not pay for the stimulus and just keep 10 RMB.
+            
+            However, if the number drawn is below your bid, you will pay
+            that drawn amount (not your original bid), and also get the
+            value of the stimulus.
+            
+            At the end of the experiment you will be paid the
+            combination of your original 10 RMB and the results of the 
+            bid. Thus you can potentially leave with 0-20 RMB
             
             Press 5 to continue...
             """)
         
-        # price rating phase
+        # value rating phase
         unknown_stims = []
         rating_stims = [self.stim_files[i] for i in [2,4,5,7,9,12,14]]
-        for rep in range(self.n_price_ratings):
+        for rep in range(self.n_value_ratings):
             unknown_stims+=sample(rating_stims,len(rating_stims))
         rating_trials = []
         for stim_file in unknown_stims:
@@ -514,12 +521,38 @@ class valueStructure:
             trial = {'stim': stim,
                      'stim_file': stim_file,
                      'stim_index': stim_i,
-                     'exp_stage': 'price_rating'}
+                     'exp_stage': 'value_rating'}
             rating_trials.append(trial)
-        self.run_price_rating(rating_trials, labeled_stims)
+        self.run_value_rating(rating_trials, labeled_stims)
         
         # randomly choose a trial
-        selected_rating = np.random.choice(self.pricedata[1:])
+        bid_won = False
+        total_win = 10
+        selected_bid = np.random.choice(self.valuedata)
+        random_price = np.random.rand()*10
+        if random_price < selected_bid['rating']:
+            bid_won = True
+            stim_value = self.node_values[selected_bid['stim_index']]
+            total_win = total_win - round(random_price,1) \
+                        + stim_value
+        if bid_won == True:
+            self.presentInstruction(
+                """
+                On the random trial we drew you bid %s RMB. The random price
+                drawn was %s RMB, so you won the bid. You paid the random price 
+                for a stimulus worth %s. Your total earning is %s RMB
+                """ % (selected_bid['rating'], round(random_price,1),
+                        stim_value, total_win)
+                )
+        else:
+            self.presentInstruction(
+                    """
+                    On the random trial we drew you bid %s. The random price
+                    drawn was %s, so you didn't win the bid. Thus you won
+                    10 RMB.
+                    """ % (selected_bid['rating'], round(random_price,1))
+                    )
+        
         
         # clean up and save
         self.writeData()
@@ -527,5 +560,5 @@ class valueStructure:
                                  size=.1)
         self.waitForKeypress(self.quit_key)
         self.closeWindow()
-        return selected_rating
+        return total_win
 
