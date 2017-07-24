@@ -50,7 +50,7 @@ class valueStructure:
         self.quit_key = 'q'
         self.node_values = values
         self.labeled_nodes = labeled_nodes
-        self.n_value_ratings = 1
+        self.n_value_ratings = 3
         self.trigger_key = '5'
         self.test_familiarization = False
         self.text_color = [1]*3
