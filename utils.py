@@ -1,6 +1,40 @@
 import numpy as np
 
 # **********HELPER FUNCTIONS ***********************************
+def create_value_graph(graph, seeds, weight = .95, steps = 1000):
+    value_graph = {key:.5 for key in graph.keys()}
+    value_graph.update(seeds)
+    node = np.random.choice(value_graph.keys())
+    for step in range(steps):
+        connections = graph[node]
+        avg_val = np.mean([value_graph[i] for i in connections])
+        value_graph[node] = value_graph[node]*weight + avg_val*(1-weight)
+        node = np.random.choice(graph[node])
+    # scale
+    min_value = np.min(value_graph.values())
+    for k in value_graph.keys():
+        value_graph[k]-=min_value
+    max_value = np.max(value_graph.values())
+    for k in value_graph.keys():
+        value_graph[k]/=max_value
+    return value_graph
+
+def extract_rt_relationships(structuredata):
+    def GroupColFunc(df, ind):
+        return str(sorted(df.loc[ind,['stim_index','last_stim']]))
+    data = structuredata.loc[:,['rt','stim_index']]
+    data.loc[:,'last_stim'] = data.stim_index.shift()
+    data = data[1:].query('rt!=-1')
+    # group rt
+    relationships = data.groupby(lambda x: GroupColFunc(data,x)).rt.median()
+    N = len(structuredata.stim_index.unique())
+    relational_matrix = np.zeros([N,N])
+    for index, row in relationships.iteritems():
+        i=int(float(index[1:4]))
+        j=int(float(index[6:9]))
+        relational_matrix[i,j] = relational_matrix[j,i] = 1/row
+    return relational_matrix
+    
 def gen_sequence(graph, n_steps):
     curr_i = np.random.choice(graph.keys())
     sequence = []

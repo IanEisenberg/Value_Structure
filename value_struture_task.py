@@ -22,8 +22,9 @@ class valueStructure:
     """ class defining a probabilistic context task
     """
     
-    def __init__(self,subjid, save_dir, stim_files, graph,
-                 trials, familiarization_trials, fullscreen = False):
+    def __init__(self,subjid, save_dir, stim_files, graph, values,
+                 labeled_nodes, trials, familiarization_trials, 
+                 fullscreen = False):
         # set up "holder" variables
         self.valuedata=[]
         self.structuredata=[]  
@@ -46,10 +47,9 @@ class valueStructure:
         self.action_keys = ['left','right']
         np.random.shuffle(self.action_keys)
         self.quit_key = 'q'
-        self.node_values = np.round(sample(np.linspace(0,10,15),15),1)
-        self.labeled_nodes = [0,1,10,11]
-        self.node_values[self.labeled_nodes] = [9.3,8,2.5,1.2]
-        self.n_value_ratings = 12
+        self.node_values = values
+        self.labeled_nodes = labeled_nodes
+        self.n_value_ratings = 5
         self.trigger_key = '5'
         self.test_familiarization = False
         self.text_color = [1]*3
@@ -194,7 +194,8 @@ class valueStructure:
         self.closeWindow()
         sys.exit()
     
-    def get_labeled_banner(self, labeled_stims, positions, height, value=True):
+    def get_labeled_banner(self, labeled_stims, positions, 
+                           height, display_value=True):
         banner = []
         labeled_stims = sample(labeled_stims, len(labeled_stims))
         for i, labeled_stim in enumerate(labeled_stims):
@@ -205,7 +206,7 @@ class valueStructure:
                                 pos=(positions[i],height),
                                 size=self.stim_size*.6)
             banner.append(stim)
-            if value:
+            if display_value:
                 # value
                 valuestim = visual.TextStim(self.win, '%s RMB' % value, 
                                            pos=(positions[i],height-.3), 
@@ -386,94 +387,94 @@ class valueStructure:
     def run_task(self, pause_trials = None):
         self.setupWindow()
         
-        self.presentInstruction('Welcome! Press 5 to continue...')
-        
-        # instructions
-        self.presentInstruction(
-            """
-            In the first part of this study, stimuli
-            will be shown one at a time for a short 
-            amount of time. Each stimulus is associated
-            with a different value between 0 RMB and 10 RMB.
-            
-            Your first task is to indicated whether 
-            each stimulus is rotated or unrotated.
-            
-            We will start by familiarizing you with the stimuli. 
-            Press the left and right keys to move through the stimuli.
-            
-            Press 5 to continue...
-            """)
-        
-        if self.test_familiarization == True:
-            learned=False
-            while not learned:
-                self.run_familiarization()
-                self.presentInstruction(
-                    """
-                    We will now practice responding to the stimuli. 
-                    Indicate whether the stimulus is unrotated or rotated.
-                    
-                            %s Key: Unrotated
-                            %s Key: Rotated
-                            
-                    Press 5 to continue...
-                    """ % (self.action_keys[0], self.action_keys[1]))
-                self.run_familiarization_test()
-                acc = np.mean([t['correct'] for t in self.structuredata 
-                               if t['exp_stage'] == 'familiarization_test'])
-                if acc>.75:
-                    learned=True
-                else:
-                    self.presentInstruction(
-                        """
-                        Seems you could use a refresher! Please look over the
-                        logos again and try to remember which way the stimulus
-                        is unrotated
-                        
-                        Press 5 to continue...
-                        """)
-        else:
-            self.run_familiarization()
-                
-        # structure learning 
-        self.presentInstruction(
-            """
-            Finished with familiarization. In the next section, 
-            indicated whether the stimulus is unrotated or rotated.
-            
-                %s Key: Unrotated
-                %s Key: Rotated
-            
-            Each logo will only come up on the screen for a short 
-            amount of time. Please respond as quickly and accurately 
-            as possible.
-            
-            You will hear a beep if you choose incorrectly.
-            This section takes a long time, so there will be two
-            breaks.
-            
-            Press 5 to continue...
-            """ % (self.action_keys[0], self.action_keys[1]))
-        self.run_graph_learning()
-        
-        self.presentInstruction(
-            """
-            Finished with that section. Take a break!
-            
-            In the next section we will ask you to bid on the
-            different stimuli (we will explain how to bid
-            on the next screen). First, we will tell you the 
-            value of 4 of the stimuli.
-            
-            When you are ready, press 5 to continue...
-            """)
-        
+#        self.presentInstruction('Welcome! Press 5 to continue...')
+#        
+#        # instructions
+#        self.presentInstruction(
+#            """
+#            In the first part of this study, stimuli
+#            will be shown one at a time for a short 
+#            amount of time. Each stimulus is associated
+#            with a different value between 0 RMB and 10 RMB.
+#            
+#            Your first task is to indicated whether 
+#            each stimulus is rotated or unrotated.
+#            
+#            We will start by familiarizing you with the stimuli. 
+#            Press the left and right keys to move through the stimuli.
+#            
+#            Press 5 to continue...
+#            """)
+#        
+#        if self.test_familiarization == True:
+#            learned=False
+#            while not learned:
+#                self.run_familiarization()
+#                self.presentInstruction(
+#                    """
+#                    We will now practice responding to the stimuli. 
+#                    Indicate whether the stimulus is unrotated or rotated.
+#                    
+#                            %s Key: Unrotated
+#                            %s Key: Rotated
+#                            
+#                    Press 5 to continue...
+#                    """ % (self.action_keys[0], self.action_keys[1]))
+#                self.run_familiarization_test()
+#                acc = np.mean([t['correct'] for t in self.structuredata 
+#                               if t['exp_stage'] == 'familiarization_test'])
+#                if acc>.75:
+#                    learned=True
+#                else:
+#                    self.presentInstruction(
+#                        """
+#                        Seems you could use a refresher! Please look over the
+#                        logos again and try to remember which way the stimulus
+#                        is unrotated
+#                        
+#                        Press 5 to continue...
+#                        """)
+#        else:
+#            self.run_familiarization()
+#                
+#        # structure learning 
+#        self.presentInstruction(
+#            """
+#            Finished with familiarization. In the next section, 
+#            indicated whether the stimulus is unrotated or rotated.
+#            
+#                %s Key: Unrotated
+#                %s Key: Rotated
+#            
+#            Each logo will only come up on the screen for a short 
+#            amount of time. Please respond as quickly and accurately 
+#            as possible.
+#            
+#            You will hear a beep if you choose incorrectly.
+#            This section takes a long time, so there will be two
+#            breaks.
+#            
+#            Press 5 to continue...
+#            """ % (self.action_keys[0], self.action_keys[1]))
+#        self.run_graph_learning()
+#        
+#        self.presentInstruction(
+#            """
+#            Finished with that section. Take a break!
+#            
+#            In the next section we will ask you to bid on the
+#            different stimuli (we will explain how to bid
+#            on the next screen). First, we will tell you the 
+#            value of 4 of the stimuli.
+#            
+#            When you are ready, press 5 to continue...
+#            """)
+#        
         # labeling phase
         label_instruction = visual.TextStim(self.win, 
                                             "Above are the values of 4 stimuli",
                                             pos=[0,-.3], units='norm')
-        labeled_stims = [(self.stim_files[i],self.node_values[i]) 
+        labeled_stims = [(self.stim_files[i],round(self.node_values[i],1)) 
                          for i in self.labeled_nodes]
         labeled_banner = self.get_labeled_banner(labeled_stims,
                                                  [-.6,-.2,.2,.6], .4)

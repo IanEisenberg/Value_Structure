@@ -1,14 +1,14 @@
 import numpy as np
 import os
 from value_struture_task import valueStructure
-from utils import gen_trials
+from utils import create_value_graph, gen_trials
 
 
 # ************Experiment Setup********************************
 # subject parameters
 subj = 'test'
 save_dir = os.path.join('Data')
-n_structure_trials = 1400
+n_structure_trials = 1000
 n_familiarization_trials = 20
 
 
@@ -33,6 +33,13 @@ graph = {0: [1,2,3,14],
          13: [10,11,12,14],
          14: [11,12,13,0]}
 
+# create value graph
+scaling = 10
+np.random.seed(2222)
+seeds = {0:.9,1:1,10:.2,11:.05}
+values = create_value_graph(graph, seeds, weight=.97, steps = 10000)
+values = {k:v*scaling for k,v in values.items()}
+
 # set up trials
 familiarization_trials = gen_trials(graph, stims, n_familiarization_trials, 
                                     duration=None,
@@ -43,7 +50,7 @@ trials = gen_trials(graph, stims, n_structure_trials,
                     exp_stage='structure_learning')
 
 # start task
-task = valueStructure(subj, save_dir, stims, graph,
+task = valueStructure(subj, save_dir, stims, graph, values, seeds.keys(),
                       trials, familiarization_trials, False)
 win = task.run_task()
 
