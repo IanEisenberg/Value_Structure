@@ -362,6 +362,113 @@ class valueStructure:
                                         
                         Press 5 when you are ready to continue
                         """)
+    
+    def run_bdm(self, value_trials):
+        bid_won = False
+        total_win = 10
+        selected_bid = np.random.choice(value_trials)
+        random_price = np.random.rand()*10
+        if random_price < selected_bid['rating']:
+            bid_won = True
+            stim_value = self.node_values[selected_bid['stim_index']]
+            total_win = total_win - round(random_price,1) \
+                        + stim_value
+        stim = visual.ImageStim(self.win, image=selected_bid['stim_file'],
+                                units='norm', pos=(0,.6),
+                                size=self.stim_size)
+        stim.draw()
+        if bid_won == True:
+            self.presentInstruction(
+            """
+            On the random trial we drew you bid %s RMB. The random price
+            drawn was %s RMB, so you won the bid. The stimulus was
+            worth %s. Your total earning is %s RMB
+            
+            Press 5 to continue...
+            """ % (selected_bid['rating'], round(random_price,1),
+                    round(stim_value,1), round(total_win,1))
+                )
+        else:
+            self.presentInstruction(
+                """
+                On the random trial we drew you bid %s. The random price
+                drawn was %s, so you didn't win the bid. Thus you won
+                10 RMB.
+                
+                Press 5 to continue...
+                """ % (selected_bid['rating'], round(random_price,1))
+                    )
+        return total_win
+            
+    def run_bdm_explanation(self, repeats = 5):
+        first_instruction = visual.TextStim(self.win, 
+            """
+            Let's practice this procedure. Let's say I asked
+            you to bid on ending this experiment right now.
+            
+            The amount you bid will determine the chance that 
+            you win the bid. If you bid a lot, you will 
+            likely stop the experiment, but you might pay 
+            a lot (remember, you pay the random number 
+            drawn, not your bid!)
+            
+            However, if you pay very little, you won't pay much, 
+            but you'll likely have to keep doing the experiment.
+            
+            Try bidding now!
+            """, pos=[0,.35], units='norm',  height=.06)
+            
+        other_instructions = visual.TextStim(self.win, 
+            """
+            Let's try another trial. Please
+            bid on how much you would pay to 
+            end the experiment now.
+            
+            Try bidding now!
+            """, pos=[0,.35], units='norm',  height=.06)
+        instruction = first_instruction
+        for repeat in range(repeats):
+            bid_won = False
+            ratingScale = visual.RatingScale(self.win, low=0, high=10,
+                                                 precision=10,
+                                                 scale='Put your bid',
+                                                 labels=('0','5','10'),
+                                                 stretch=2,
+                                                 pos=(0,-.5),
+                                                 markerColor='white')
+            
+            ratingScale.draw()
+            while ratingScale.noResponse:
+                instruction.draw()
+                ratingScale.draw()
+                self.win.flip()
+            rating = ratingScale.getRating()
+            
+            random_price = np.random.rand()*10
+            if random_price < rating:
+                bid_won = True
+            if bid_won == True:
+                self.presentInstruction(
+                """
+                You bid %s RMB. The random price drawn was %s RMB, 
+                so you won the bid. If this was a real bid,
+                you'd pay us %s and end the experiment!
+                
+                Press 5 to continue...
+                """ % (rating, round(random_price,1),
+                        round(random_price,1))
+                    )
+            else:
+                self.presentInstruction(
+                """
+                You bid %s RMB. The random price drawn was %s RMB, 
+                so you lost the bid. You pay nothing and have
+                to continue the experiment!
+                
+                Press 5 to continue...
+                """ % (rating, round(random_price,1))
+                    )
+            instruction = other_instructions
         
     def run_value_rating(self, trials, labeled_stims=None):
         instruction = visual.TextStim(self.win, 
@@ -399,7 +506,6 @@ class valueStructure:
         
     def run_task(self, pause_trials = None):
         self.setupWindow()
-        
         self.presentInstruction('Welcome! Press 5 to continue...')
         
         # instructions
@@ -499,7 +605,7 @@ class valueStructure:
         
         self.presentInstruction(
             """
-            We will now start the bidding. You will start with 10 RMB,
+            To bid, you will start with 10 RMB,
             which you can use to bid. Remember that each stimulus is 
             associated with a value between 0 RMB and 10 RMB.
             
@@ -514,16 +620,26 @@ class valueStructure:
             that drawn amount (not your original bid), and also get the
             value of the stimulus.
             
-            At the end of the experiment three people will be
-            randomly selected to be paid. If selected,
-            you will be paid the combination of your original 
-            10 RMB and the results of the 
-            bid. Thus you can earn 0-20 RMB.
+            At the end of the experiment you will be paid the 
+            combination of your original 10 RMB and the 
+            results of the bid. Thus you can earn 0-20 RMB.
             
             Press 5 to continue...
             """, size=.06)
         
+        # practice bdm
+        self.run_bdm_explanation()
+        
         # value rating phase
+        self.presentInstruction(
+            """
+            We will now start the real bidding on the stimuli.
+            
+            Remember, each stimulus is worth between 0 RMB
+            and 10 RMB.
+            
+            Press 5 to continue...
+            """, size=.06)
         unknown_stims = []
         rating_stims = [self.stim_files[i] for i in [2,3,4,5,6,7,8,9,12,13,14]]
         for rep in range(self.n_value_ratings):
@@ -541,44 +657,14 @@ class valueStructure:
             rating_trials.append(trial)
         self.run_value_rating(rating_trials, labeled_stims)
         
-        # randomly choose a trial
-        bid_won = False
-        total_win = 10
-        selected_bid = np.random.choice(self.valuedata)
-        random_price = np.random.rand()*10
-        if random_price < selected_bid['rating']:
-            bid_won = True
-            stim_value = self.node_values[selected_bid['stim_index']]
-            total_win = total_win - round(random_price,1) \
-                        + stim_value
-        stim = visual.ImageStim(self.win, image=selected_bid['stim_file'],
-                                units='norm', pos=(0,.6),
-                                size=self.stim_size)
-        stim.draw()
-        if bid_won == True:
-            self.presentInstruction(
-            """
-            On the random trial we drew you bid %s RMB. The random price
-            drawn was %s RMB, so you won the bid. The stimulus was
-            worth %s. Your total earning is %s RMB
-            """ % (selected_bid['rating'], round(random_price,1),
-                    round(stim_value,1), round(total_win,1))
-                )
-        else:
-            self.presentInstruction(
-                """
-                On the random trial we drew you bid %s. The random price
-                drawn was %s, so you didn't win the bid. Thus you won
-                10 RMB.
-                """ % (selected_bid['rating'], round(random_price,1))
-                    )
+        # determine payouts
+        self.total_win = self.run_bdm(self.valuedata)
         
-        self.total_win = total_win
         # clean up and save
         self.writeData()
         self.presentTextToWindow('Thank you. Please wait for the experimenter',
                                  size=.1)
         self.waitForKeypress(self.quit_key)
         self.closeWindow()
-        return total_win
+        return self.total_win
 
