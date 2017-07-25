@@ -96,7 +96,7 @@ class valueStructure:
                     'graph': self.graph,
                     'action_keys': self.action_keys,
                     'labeled_nodes': self.labeled_nodes,
-                    'node_values': list(self.node_values)
+                    'node_values': self.node_values
                     }
         # save data
         save_loc = os.path.join(self.save_dir,'RawData',self.datafilename)
@@ -233,8 +233,8 @@ class valueStructure:
             stim = visual.ImageStim(self.win, image=stim_file,
                                 units='norm', 
                                 pos=(stim_pos,
-                                     scale.pos[1]+.16+overlap),
-                                size=self.stim_size*.3)
+                                     scale.pos[1]+.17+overlap),
+                                size=self.stim_size*.4)
             banner.append(stim)
             positions.append(stim_pos)
         return banner
@@ -404,20 +404,24 @@ class valueStructure:
                     )
         return total_win
             
-    def run_bdm_explanation(self, repeats = 5):
+    def run_bdm_explanation(self, repeats = 3):
+        stim = visual.ImageStim(self.win, image='images/instruction_stim.png',
+                                units='norm', pos=(-.6,.2),
+                                size=self.stim_size)
         first_instruction = visual.TextStim(self.win, 
             """
-            Let's practice this procedure. Let's say I asked
-            you to bid on ending this experiment right now.
+            Let's practice this procedure. Pretend you are
+            bidding on the stimulus on the left, which is
+            worth between 0 and 10 RMB.
             
             The amount you bid will determine the chance that 
             you win the bid. If you bid a lot, you will 
-            likely stop the experiment, but you might pay 
-            a lot (remember, you pay the random number 
-            drawn, not your bid!)
+            likely get the value associated with the stimulus, 
+            but you might pay a lot (remember, you pay the 
+            random number drawn, not your bid!)
             
-            However, if you bid very little, you won't pay much, 
-            but you'll likely have to keep doing the experiment.
+            However, if you bid very little, you won't pay much
+            if you win, but you probably won't win the stimulus.
             
             Try bidding now!
             """, pos=[0,.35], units='norm',  height=.06)
@@ -425,8 +429,8 @@ class valueStructure:
         other_instructions = visual.TextStim(self.win, 
             """
             Let's try another trial. Please
-            bid on how much you would pay to 
-            end the experiment now.
+            bid on how much you would bid
+            for the stimulus on the left.
             
             Try bidding now!
             """, pos=[0,.35], units='norm',  height=.06)
@@ -435,7 +439,7 @@ class valueStructure:
             bid_won = False
             ratingScale = visual.RatingScale(self.win, low=0, high=10,
                                                  precision=10,
-                                                 scale='Put your bid',
+                                                 scale='Select your bid in RMB',
                                                  labels=('0','5','10'),
                                                  stretch=2,
                                                  pos=(0,-.5),
@@ -445,6 +449,7 @@ class valueStructure:
             while ratingScale.noResponse:
                 instruction.draw()
                 ratingScale.draw()
+                stim.draw()
                 self.win.flip()
             rating = ratingScale.getRating()
             
@@ -456,7 +461,7 @@ class valueStructure:
                 """
                 You bid %s RMB. The random price drawn was %s RMB, 
                 so you won the bid. If this was a real bid,
-                you'd pay us %s and end the experiment!
+                you'd win the X RMB associated with the stimulus.
                 
                 Press 5 to continue...
                 """ % (rating, round(random_price,1),
@@ -466,8 +471,7 @@ class valueStructure:
                 self.presentInstruction(
                 """
                 You bid %s RMB. The random price drawn was %s RMB, 
-                so you lost the bid. You pay nothing and have
-                to continue the experiment!
+                so you lost the bid. You pay nothing and get nothing.
                 
                 Press 5 to continue...
                 """ % (rating, round(random_price,1))
@@ -513,18 +517,32 @@ class valueStructure:
         self.presentInstruction('Welcome! Press 5 to continue...')
         
         # instructions
+        
+        self.presentInstruction(
+            """
+            This task will help us learn about how you value things.
+            
+            There are two parts of this task. In the first part
+            you will learn about 15 different stimuli.
+            
+            In the second phase you will provide a
+            value for the stimuli.
+            
+            Press 5 to continue...
+            """)
+                
         self.presentInstruction(
             """
             In the first part of this study, stimuli
             will be shown one at a time for a short 
-            amount of time. Each stimulus is associated
-            with a different value between 0 RMB and 10 RMB.
+            amount of time.
             
             Your first task is to indicated whether 
             each stimulus is rotated or unrotated.
             
-            We will start by familiarizing you with the stimuli. 
-            Press the left and right keys to move through the stimuli.
+            We will start by familiarizing you with the 
+            stimuli. Press the left and right keys to 
+            move through the stimuli.
             
             Press 5 to continue...
             """)
@@ -581,37 +599,28 @@ class valueStructure:
             """ % (self.action_keys[0], self.action_keys[1]))
         self.run_graph_learning()
         
+        # instructions for bid
         self.presentInstruction(
             """
-            Finished with that section. Take a break!
+            Finished with the first part. In this second part you will
+            provide a value for each stimulus.The value of the stimuli 
+            were set before you started the experiment and were not
+            based on their appearance.
             
-            In the next section we will ask you to bid on the
-            different stimuli (we will explain how to bid
-            on the next screen). First, we will tell you the 
-            value of 4 of the stimuli.
+            Each stimulus is worth between 0 RMB and 10 RMB. 
+            
+            Q: How will you provide your value for each stimuli?
+            
+            A: We will ask you to bid on the different stimuli,
+               which we will explain how to bid on the next screen.
             
             When you are ready, press 5 to continue...
             """)
         
-        # labeling phase
-        label_instruction = visual.TextStim(self.win, 
-                                            "Above are the values of 4 stimuli",
-                                            pos=[0,-.3], units='norm')
-        labeled_stims = [(self.stim_files[i],round(self.node_values[i],1)) 
-                         for i in self.labeled_nodes]
-        labeled_banner = self.get_labeled_banner(labeled_stims,
-                                                 [-.6,-.2, .2, .6], .4)
-        for c in labeled_banner:
-            c.draw()
-        label_instruction.draw()
-        self.win.flip()
-        self.waitForKeypress()
         
         self.presentInstruction(
             """
             You will start with 10 RMB, which you can use to bid. 
-            Remember that each stimulus is associated with 
-            a value between 0 RMB and 10 RMB.
             
             Bidding works by stating a value between 0 RMB
             and 10 RMB that you are willing to pay for a stimulus. 
@@ -634,16 +643,37 @@ class valueStructure:
         # practice bdm
         self.run_bdm_explanation()
         
-        # value rating phase
         self.presentInstruction(
             """
             We will now start the real bidding on the stimuli.
             
-            Remember, each stimulus is worth between 0 RMB
-            and 10 RMB.
+            To help you, we will tell you the value of 4 
+            of the stimuli on the next screen.
             
             Press 5 to continue...
             """, size=.06)
+        
+        # labeling phase
+        label_instruction = visual.TextStim(self.win, 
+                                            """
+                                            Above are the values of 4 stimuli
+                                            
+                                            When you are ready to begin press 5...
+                                            """,
+                                            pos=[0,-.3], units='norm',
+                                            height=.07)
+        
+        labeled_stims = [(self.stim_files[i],round(self.node_values[i],1)) 
+                         for i in self.labeled_nodes]
+        labeled_banner = self.get_labeled_banner(labeled_stims,
+                                                 [-.6,-.2, .2, .6], .4)
+        for c in labeled_banner:
+            c.draw()
+        label_instruction.draw()
+        self.win.flip()
+        self.waitForKeypress()
+        
+        # value rating phase
         unknown_stims = []
         rating_stims = [self.stim_files[i] for i in [2,3,4,5,6,7,8,9,12,13,14]]
         for rep in range(self.n_value_ratings):

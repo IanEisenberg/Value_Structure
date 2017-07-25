@@ -27,6 +27,7 @@ def graph_from_judgments(value_graph):
 # load data
 data_loc = path.join('Data','ProcessedData')
 structuredata = pd.read_csv(path.join(data_loc, 'structuredata.csv'))
+valuedata = pd.read_csv(path.join(data_loc, 'valuedata.csv'))
 taskdata = cPickle.load(open(path.join(data_loc,'taskdata.pkl'),'rb'))
 
 # visual style for graphs
@@ -60,6 +61,18 @@ process.wait()
 for f in glob('*.png'):
     remove(f)
 
+# plot subject value graph
+subj = 'CH'
+values = taskdata[subj]['node_values'].copy()
+subj_rating = valuedata.query('subjid=="%s"' % subj) \
+                .groupby('stim_index').rating.mean()
+values.update(subj_rating)
+g = graph_from_judgments(values)
+weights = [i**3*4 for i in g.es['weight']]
+#value_layout = layout
+value_layout = g.layout_fruchterman_reingold(weights=g.es["weight"])
+igraph.plot(g, inline=False, edge_width=weights, layout=value_layout,
+            **visual_style)
 
 # plot value graph
 value_graph = taskdata.values()[0]['values']

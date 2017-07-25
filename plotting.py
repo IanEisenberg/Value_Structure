@@ -15,7 +15,7 @@ for subset in valuedata.groupby('stim_repetition'):
     sns.kdeplot(subset[1].rating, label = label, linewidth=3)
 sns.plt.legend(fontsize=20, title='Stimulus Repetition')
 sns.plt.xlabel('value Rating', fontsize = 18)
-sns.plt.title('value Rating as a function of Stimulus Repetition',
+sns.plt.title('Value Rating as a function of Stimulus Repetition',
               fontsize = 22)
 
 sns.plt.figure(figsize=(12,8))
@@ -24,7 +24,7 @@ for subset in valuedata.groupby('community'):
     sns.kdeplot(subset[1].rating, label = label, linewidth=3)
 sns.plt.legend(fontsize=20, title='Community')
 sns.plt.xlabel('value Rating', fontsize = 18)
-sns.plt.title('value Rating as a function of Community',
+sns.plt.title('Value Rating as a function of Community',
               fontsize = 22)
 
 # plot based on average community value

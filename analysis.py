@@ -23,12 +23,12 @@ for filey in sorted(glob('Data/RawData/*pkl')):
     subj_valuedata.loc[:,'subjid'] = subj
     # add subject specific variables
     subj_structuredata.loc[:,'correct_shift'] = subj_structuredata.correct.shift()
-    n_stim = int(np.max(subj_valuedata.stim_index)+1)
-    n_repeats = (len(subj_valuedata)-1)//n_stim
-    repeat_array = np.hstack([[i]*n_stim for i in range(1, n_repeats+1)])
+    n_stim = len(np.unique(subj_valuedata.stim_index))
+    n_repeats = (len(subj_valuedata))//n_stim
+    repeat_array = np.hstack([[i]*n_stim for i in range(n_repeats)])
     subj_valuedata.loc[:, 'stim_repetition'] = repeat_array
     # node values
-    node_values = dict(data['taskdata']['labeled_nodes'])
+    node_values = data['taskdata']['node_values']
     value_labels = subj_valuedata.stim_index. \
                     apply(lambda x: node_values.get(x,np.nan))
     subj_valuedata.loc[:,'labeled_value'] = value_labels
@@ -69,7 +69,7 @@ for i, stim in enumerate(structuredata.stim_index):
 structuredata.loc[:,'steps_since_seen'] = steps_since_seen  
 
 
-valuedata.loc[1:,'community'] = valuedata.stim_index.apply(f)
+valuedata.loc[:,'community'] = valuedata.stim_index.apply(f)
 
 # save data
 save_loc = path.join('Data','ProcessedData')
@@ -92,3 +92,4 @@ for DV in ['rt', 'np.log(rt)']:
     DV_name = DV[-7:]
     models[DV_name] = rs
     models[DV_name + '_full'] = rs_full
+    
