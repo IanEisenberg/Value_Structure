@@ -416,7 +416,7 @@ class valueStructure:
             a lot (remember, you pay the random number 
             drawn, not your bid!)
             
-            However, if you pay very little, you won't pay much, 
+            However, if you bid very little, you won't pay much, 
             but you'll likely have to keep doing the experiment.
             
             Try bidding now!
@@ -609,7 +609,7 @@ class valueStructure:
         
         self.presentInstruction(
             """
-            You will start with 10 RMB,which you can use to bid. 
+            You will start with 10 RMB, which you can use to bid. 
             Remember that each stimulus is associated with 
             a value between 0 RMB and 10 RMB.
             
