@@ -202,7 +202,7 @@ class valueStructure:
         labeled_stims = sample(labeled_stims, len(labeled_stims))
         for i, labeled_stim in enumerate(labeled_stims):
             stim_file, value = labeled_stim
-            # logo
+            # stimulus
             stim = visual.ImageStim(self.win, image=stim_file,
                                 units='norm', 
                                 pos=(positions[i],height),
@@ -225,7 +225,7 @@ class valueStructure:
         for i, labeled_stim in enumerate(labeled_stims):
             overlap=0
             stim_file, value = labeled_stim
-            # logo
+            # stimulus
             stim_pos = float(value-limits[0])/(limits[1]-limits[0])
             stim_pos = stim_pos*pos_limits[1]+(1-stim_pos)*pos_limits[0]
             if np.any([abs(i-stim_pos)<.1 for i in positions]):
@@ -380,9 +380,11 @@ class valueStructure:
         if bid_won == True:
             self.presentInstruction(
             """
-            On the random trial we drew you bid %s RMB. The random price
-            drawn was %s RMB, so you won the bid. The stimulus was
-            worth %s. Your total earning is %s RMB
+            On the random trial we drew you bid %s RMB on the
+            stimulus above. 
+            
+            The random price drawn was %s RMB, so you won the bid. 
+            The stimulus was worth %s. Your total earning is %s RMB
             
             Press 5 to continue...
             """ % (selected_bid['rating'], round(random_price,1),
@@ -391,9 +393,11 @@ class valueStructure:
         else:
             self.presentInstruction(
                 """
-                On the random trial we drew you bid %s. The random price
-                drawn was %s, so you didn't win the bid. Thus you won
-                10 RMB.
+                On the random trial we drew you bid %s on the sitmulus
+                above. 
+                
+                The random price drawn was %s, so you didn't win the bid. 
+                Thus you won 10 RMB.
                 
                 Press 5 to continue...
                 """ % (selected_bid['rating'], round(random_price,1))
@@ -534,8 +538,8 @@ class valueStructure:
                     We will now practice responding to the stimuli. 
                     Indicate whether the stimulus is unrotated or rotated.
                     
-                            %s Key: Unrotated
-                            %s Key: Rotated
+                            %s key: Unrotated
+                            %s key: Rotated
                             
                     Press 5 to continue...
                     """ % (self.action_keys[0], self.action_keys[1]))
@@ -548,7 +552,7 @@ class valueStructure:
                     self.presentInstruction(
                         """
                         Seems you could use a refresher! Please look over the
-                        logos again and try to remember which way the stimulus
+                        stimuli again and try to remember which way the stimulus
                         is unrotated
                         
                         Press 5 to continue...
@@ -562,10 +566,10 @@ class valueStructure:
             Finished with familiarization. In the next section, 
             indicated whether the stimulus is unrotated or rotated.
             
-                %s Key: Unrotated
-                %s Key: Rotated
+                %s key: Unrotated
+                %s key: Rotated
             
-            Each logo will only come up on the screen for a short 
+            Each stimulus will only come up on the screen for a short 
             amount of time. Please respond as quickly and accurately 
             as possible.
             
@@ -605,9 +609,9 @@ class valueStructure:
         
         self.presentInstruction(
             """
-            To bid, you will start with 10 RMB,
-            which you can use to bid. Remember that each stimulus is 
-            associated with a value between 0 RMB and 10 RMB.
+            You will start with 10 RMB,which you can use to bid. 
+            Remember that each stimulus is associated with 
+            a value between 0 RMB and 10 RMB.
             
             Bidding works by stating a value between 0 RMB
             and 10 RMB that you are willing to pay for a stimulus. 
