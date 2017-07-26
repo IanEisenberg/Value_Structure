@@ -16,11 +16,14 @@ def graph_from_dict(graph_dict):
 
 def graph_from_judgments(value_graph):
     from itertools import combinations
+    nodes = list(value_graph.keys())
     g = igraph.Graph() 
-    g.add_vertices(value_graph.keys())
-    g.vs['label'] = value_graph.keys()
+    g.add_vertices(nodes)
+    g.vs['label'] = nodes
     for n1,n2 in combinations(value_graph.keys(),2):   
-        g.add_edge(n1,n2, weight = 1-abs(value_graph[n2]-value_graph[n1]))
+        i = nodes.index(n1)
+        j = nodes.index(n2)
+        g.add_edge(i,j, weight = 1-abs(value_graph[n2]-value_graph[n1]))
     return g
 
 
@@ -62,7 +65,7 @@ for f in glob('*.png'):
     remove(f)
 
 # plot subject value graph
-subj = 'CH'
+subj = 'GL'
 values = taskdata[subj]['node_values'].copy()
 subj_rating = valuedata.query('subjid=="%s"' % subj) \
                 .groupby('stim_index').rating.mean()
