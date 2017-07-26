@@ -1,3 +1,4 @@
+import cPickle
 import numpy as np
 import os
 from value_struture_task import valueStructure
@@ -34,11 +35,15 @@ graph = {0: [1,2,3,14],
          14: [11,12,13,0]}
 
 # create value graph
+"""
 scaling = 10
 np.random.seed(2222)
 seeds = {2:.9,1:1,11:.1,12:.01}
 values = create_value_graph(graph, seeds, weight=.99, steps = 3000)
 values = {k:v*scaling for k,v in values.items()}
+"""
+
+values = cPickle.load(open('values.pkl','rb'))
 
 # set up trials
 familiarization_trials = gen_trials(graph, stims, n_familiarization_trials, 
