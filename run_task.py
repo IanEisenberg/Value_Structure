@@ -15,7 +15,7 @@ n_familiarization_trials = 20
 
 
 # set up and shuffle stims
-stims = ['images/%s.png' % i for i in range(1,16)]
+stims = ['images/%s.png' % i for i in range(1,12)]
 np.random.shuffle(stims)
 # graph structure
 """
@@ -73,7 +73,7 @@ trials = gen_trials(graph, stims, n_structure_trials,
 # start task
 # use seeds [0,1,10,11] for 15 node graph
 task = valueStructure(subj, save_dir, stims, graph, values, [0,1,6,7],
-                      trials, familiarization_trials, False)
+                      trials, familiarization_trials, True)
 win = task.run_task()
 
 
