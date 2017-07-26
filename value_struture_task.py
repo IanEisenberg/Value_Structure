@@ -404,11 +404,8 @@ class valueStructure:
                     )
         return total_win
             
-    def run_bdm_explanation(self, repeats = 2):
-        trial_types = ['win','loss']*repeats
-        stim = visual.ImageStim(self.win, image='images/instruction_stim.png',
-                                units='norm', pos=(-.6,.2),
-                                size=self.stim_size)
+    def run_bdm_explanation(self):
+        trial_types = ['win','loss']*2
         first_instruction = visual.TextStim(self.win, 
             """
             Let's practice this procedure. Pretend you are
@@ -436,8 +433,12 @@ class valueStructure:
             Try bidding now!
             """, pos=[0,.35], units='norm',  height=.06)
         instruction = first_instruction
-        for trial in trial_types:
+        for i, trial in enumerate(trial_types):
             bid_won = False
+            stim = visual.ImageStim(self.win, 
+                                    image='images/instruction_stim%s.png' % (i+1),
+                                    units='norm', pos=(-.6,.2),
+                                    size=self.stim_size)
             ratingScale = visual.RatingScale(self.win, low=0, high=10,
                                                  precision=10,
                                                  scale='Select your bid in RMB',
