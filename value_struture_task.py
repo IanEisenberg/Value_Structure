@@ -404,7 +404,8 @@ class valueStructure:
                     )
         return total_win
             
-    def run_bdm_explanation(self, repeats = 3):
+    def run_bdm_explanation(self, repeats = 2):
+        trial_types = ['win','loss']*repeats
         stim = visual.ImageStim(self.win, image='images/instruction_stim.png',
                                 units='norm', pos=(-.6,.2),
                                 size=self.stim_size)
@@ -435,7 +436,7 @@ class valueStructure:
             Try bidding now!
             """, pos=[0,.35], units='norm',  height=.06)
         instruction = first_instruction
-        for repeat in range(repeats):
+        for trial in trial_types:
             bid_won = False
             ratingScale = visual.RatingScale(self.win, low=0, high=10,
                                                  precision=10,
@@ -453,7 +454,10 @@ class valueStructure:
                 self.win.flip()
             rating = ratingScale.getRating()
             
-            random_price = np.random.rand()*10
+            if trial=='win':
+                random_price = np.random.rand()*rating
+            else:
+                random_price = rating+np.random.rand()*(10-rating)
             if random_price < rating:
                 bid_won = True
             if bid_won == True:
@@ -461,7 +465,8 @@ class valueStructure:
                 """
                 You bid %s RMB. The random price drawn was %s RMB, 
                 so you won the bid. If this was a real bid,
-                you'd win the X RMB associated with the stimulus.
+                you'd pay %s and win the X RMB associated 
+                with the stimulus.
                 
                 Press 5 to continue...
                 """ % (rating, round(random_price,1),
@@ -523,7 +528,7 @@ class valueStructure:
             This task will help us learn about how you value things.
             
             There are two parts of this task. In the first part
-            you will learn about 15 different stimuli.
+            you will interact with 15 different stimuli.
             
             In the second phase you will provide a
             value for the stimuli.
@@ -537,7 +542,7 @@ class valueStructure:
             will be shown one at a time for a short 
             amount of time.
             
-            Your first task is to indicated whether 
+            Your task is to indicated whether 
             each stimulus is rotated or unrotated.
             
             We will start by familiarizing you with the 
@@ -603,16 +608,16 @@ class valueStructure:
         self.presentInstruction(
             """
             Finished with the first part. In this second part you will
-            provide a value for each stimulus.The value of the stimuli 
-            were set before you started the experiment and were not
-            based on their appearance.
+            provide a value for each stimulus. The value of the 
+            stimuli were set before you started the experiment 
+            and were not based on their appearance.
             
             Each stimulus is worth between 0 RMB and 10 RMB. 
             
             Q: How will you provide your value for each stimuli?
             
             A: We will ask you to bid on the different stimuli,
-               which we will explain how to bid on the next screen.
+                which we will explain how to bid on the next screen.
             
             When you are ready, press 5 to continue...
             """)
@@ -655,13 +660,13 @@ class valueStructure:
         
         # labeling phase
         label_instruction = visual.TextStim(self.win, 
-                                            """
-                                            Above are the values of 4 stimuli
-                                            
-                                            When you are ready to begin press 5...
-                                            """,
-                                            pos=[0,-.3], units='norm',
-                                            height=.07)
+            """
+            Above are the values of 4 stimuli. They
+            will be shown on the screen during each of
+            your bids.
+                                
+            When you are ready to begin press 5...
+            """, pos=[0,-.3], units='norm', height=.07)
         
         labeled_stims = [(self.stim_files[i],round(self.node_values[i],1)) 
                          for i in self.labeled_nodes]
