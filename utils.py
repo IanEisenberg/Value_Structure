@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 # **********HELPER FUNCTIONS ***********************************
 def create_value_graph(graph, seeds, weight = .95, steps = 1000):
@@ -54,24 +55,37 @@ def gen_trials(graph, stims, trial_count=100, duration=1.5, exp_stage=None,
         sequence = gen_sequence(graph, trial_count)
     else:
         sequence = gen_balanced_sequence(graph, 2)
+    stim_counts = pd.value_counts(sequence)
+    stim_rotations = {k: [0]*v for k,v in stim_counts.iteritems()}
+    for k,v in stim_rotations.items():
+        n_rotations = int(round(len(v)*.2))
+        v[0:n_rotations] = [90]*n_rotations
+        np.random.shuffle(v)
         
     trials = []
     for stim_i in sequence:
         trial = {'stim_index': stim_i,
                  'stim_file': stims[stim_i],
                  'duration': duration,
-                 'rotation': 90*np.random.choice([0,1],p=[.8,.2]),
+                 'rotation': stim_rotations[stim_i].pop(),
                  'exp_stage': exp_stage}
         trials.append(trial)
     return trials
 
-def get_node_colors():
+def get_node_colors(nodes=11):
     c_colors = [[.8,0,.2], [0,.8,.4], [0,.1,1]]
-    colors = [c_colors[0]]*5 + [c_colors[1]]*5 + [c_colors[2]]*5
-    colors[0] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[2])]
-    colors[4] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[1])]
-    colors[5] = [i*.7+y*.3 for i,y in zip(c_colors[1],c_colors[0])]
-    colors[9] = [i*.7+y*.3 for i,y in zip(c_colors[1],c_colors[2])]
-    colors[10] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[1])]
-    colors[14] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[0])]
+    if nodes == 15:
+        colors = [c_colors[0]]*5 + [c_colors[1]]*5 + [c_colors[2]]*5
+        colors[0] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[2])]
+        colors[4] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[1])]
+        colors[5] = [i*.7+y*.3 for i,y in zip(c_colors[1],c_colors[0])]
+        colors[9] = [i*.7+y*.3 for i,y in zip(c_colors[1],c_colors[2])]
+        colors[10] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[1])]
+        colors[14] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[0])]
+    elif nodes == 11:
+        colors = [c_colors[0]]*5 + [c_colors[1]] + [c_colors[2]]*5
+        colors[0] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[2])]
+        colors[4] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[1])]
+        colors[6] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[1])]
+        colors[10] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[0])]
     return colors

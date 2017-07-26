@@ -17,7 +17,7 @@ node_lookup = {i:k for k,v in communities.items() for i in v }
 f = lambda x: [k for k,v in communities.items() if x in v][0]
 
 datafiles = sorted(glob('Data/RawData/*pkl'))
-for exclude in ['CH', 'GL']:
+for exclude in ['/CH', '/GL', '/YH']:
     datafiles = [i for i in datafiles if exclude not in i]
 
 for filey in datafiles:
@@ -32,6 +32,7 @@ for filey in datafiles:
     
     # for structuredata
     subj_structuredata.loc[:,'correct_shift'] = subj_structuredata.correct.shift()
+    subj_structuredata.loc[:,'congruent_rot'] = subj_structuredata.rotation==subj_structuredata.rotation.shift()
     # add community columns
     subj_structuredata.loc[:,'community'] = subj_structuredata.stim_index.apply(f)
     subj_structuredata.loc[1:,'community_cross'] = (subj_structuredata.community.diff()!=0)[1:]
@@ -94,6 +95,7 @@ cPickle.dump(taskdata,open(path.join(save_loc,'taskdata.pkl'),'wb'))
 
 # **********Analysis*********************************
 regress_data = structuredata.query('rt!=-1')
+# regress_data = structuredata.query('rt!=-1 and correct==True')
 
 # structure reaction time data
 models = {}
@@ -102,9 +104,35 @@ for DV in ['rt', 'np.log(rt)']:
                      regress_data, groups=regress_data["subjid"])
     # larger model
     rs_full = smf.mixedlm("%s ~ community_cross + steps_since_seen \
-                          + correct_shift + C(rotation)" % DV, 
+                          + correct_shift + C(rotation) + congruent_rot" % DV, 
                      regress_data, groups=regress_data["subjid"])
     DV_name = DV[-7:]
     models[DV_name] = rs
     models[DV_name + '_full'] = rs_full
     
+structure_coefficients = models['rt_full'].random_effects
+
+# structure data win stay/lose switch (or just change in attention following error?)
+for rot in [0,90]:
+    structuredata[(structuredata.rotation.shift()==rot) 
+                    & (structuredata.rt!=-1)] \
+                .groupby(['correct_shift','rotation']).correct.mean()
+
+    structuredata[(structuredata.rotation.shift()==rot) 
+                & (structuredata.rt!=-1)] \
+            .groupby(['correct_shift','rotation']).rt.median()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -323,6 +323,10 @@ class valueStructure:
                 trial['correct']=True
                 # record points for bonus
                 self.pointtracker += 1
+        else:
+            miss_sound = sound.Sound(secs=.1,value=700)
+            miss_sound.play()
+            core.wait(.5)
                 
         # log trial and add to data
         self.writeToLog(json.dumps(trial))
@@ -350,6 +354,15 @@ class valueStructure:
             self.presentTrial(trial)
                             
     def run_graph_learning(self):
+        # show beeps
+        self.presentInstruction('Press 5 to hear the error beep')
+        error_sound = sound.Sound(secs=.1,value=500)
+        error_sound.play(); core.wait(.5)
+        self.presentInstruction('Press 5 to hear the "miss" beep')
+        error_sound = sound.Sound(secs=.1,value=700)
+        error_sound.play(); core.wait(.5)
+        self.presentInstruction('Press 5 to start')
+        # start graph learning
         pause_trials = (len(self.trials)/3, len(self.trials)/3*2)
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
@@ -597,12 +610,15 @@ class valueStructure:
             amount of time. Please respond as quickly and accurately 
             as possible.
             
-            You will hear a beep if you choose incorrectly.
+            You will hear a beep if you choose incorrectly or miss
+            a response.
+            
             This section takes a long time, so there will be two
             breaks.
             
             Press 5 to continue...
             """ % (self.action_keys[0], self.action_keys[1]))
+        
         self.run_graph_learning()
         
         # instructions for bid
@@ -618,7 +634,7 @@ class valueStructure:
             Q: How will you provide your value for each stimuli?
             
             A: We will ask you to bid on the different stimuli,
-                which we will on the next screen.
+                which we will explain on the next screen.
             
             When you are ready, press 5 to continue...
             """)

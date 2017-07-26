@@ -16,14 +16,16 @@ def graph_from_dict(graph_dict):
 
 def graph_from_judgments(value_graph):
     from itertools import combinations
+    value_graph = value_graph.copy()
     nodes = list(value_graph.keys())
     g = igraph.Graph() 
     g.add_vertices(nodes)
     g.vs['label'] = nodes
+    va
     for n1,n2 in combinations(value_graph.keys(),2):   
         i = nodes.index(n1)
         j = nodes.index(n2)
-        g.add_edge(i,j, weight = 1-abs(value_graph[n2]-value_graph[n1]))
+        g.add_edge(i,j, weight = (10-abs(value_graph[n2]-value_graph[n1]))/10)
     return g
 
 
@@ -65,7 +67,7 @@ for f in glob('*.png'):
     remove(f)
 
 # plot subject value graph
-subj = 'GL'
+subj = 'JCH'
 values = taskdata[subj]['node_values'].copy()
 subj_rating = valuedata.query('subjid=="%s"' % subj) \
                 .groupby('stim_index').rating.mean()
@@ -79,9 +81,10 @@ igraph.plot(g, inline=False, edge_width=weights, layout=value_layout,
             **visual_style)
 
 # plot value graph
-value_graph = taskdata.values()[0]['values']
+value_graph = taskdata[subj]['node_values']
 g = graph_from_judgments(value_graph)
-weights = [i**3*4 for i in g.es['weight']]
+g.vs['color'] = colors
+weights = [i**3 for i in g.es['weight']]
 #value_layout = layout
 value_layout = g.layout_fruchterman_reingold(weights=g.es["weight"])
 igraph.plot(g, inline=False, edge_width=weights, layout=value_layout,
