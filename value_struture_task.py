@@ -529,7 +529,7 @@ class valueStructure:
             This task will help us learn about how you value things.
             
             There are two parts of this task. In the first part
-            you will interact with 15 different stimuli.
+            you will interact with 11 different stimuli.
             
             In the second phase you will provide a
             value for the stimuli.
@@ -681,7 +681,7 @@ class valueStructure:
         
         # value rating phase
         unknown_stims = []
-        rating_stims = [self.stim_files[i] for i in [2,3,4,5,6,7,8,9,12,13,14]]
+        rating_stims = [self.stim_files[i] for i in list(set(self.node_values.keys())-set(self.labeled_nodes))]
         for rep in range(self.n_value_ratings):
             unknown_stims+=sample(rating_stims,len(rating_stims))
         rating_trials = []

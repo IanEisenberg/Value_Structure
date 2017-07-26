@@ -17,7 +17,7 @@ node_lookup = {i:k for k,v in communities.items() for i in v }
 f = lambda x: [k for k,v in communities.items() if x in v][0]
 
 datafiles = sorted(glob('Data/RawData/*pkl'))
-for exclude in ['CH']:
+for exclude in ['CH', 'GL']:
     datafiles = [i for i in datafiles if exclude not in i]
 
 for filey in datafiles:

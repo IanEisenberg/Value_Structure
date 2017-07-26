@@ -18,6 +18,8 @@ n_familiarization_trials = 20
 stims = ['images/%s.png' % i for i in range(1,16)]
 np.random.shuffle(stims)
 # graph structure
+"""
+# 15 node graph
 graph = {0: [1,2,3,14],
          1: [0,2,3,4],
          2: [0,1,3,4],
@@ -33,14 +35,28 @@ graph = {0: [1,2,3,14],
          12: [10,11,13,14],
          13: [10,11,12,14],
          14: [11,12,13,0]}
+"""
+# 11 node graph
+graph = {0: [1,2,3,10],
+         1: [0,2,3,4],
+         2: [0,1,3,4],
+         3: [0,1,2,4],
+         4: [1,2,3,5],
+         5: [4,6],
+         6: [5,7,8,9],
+         7: [6,8,9,10],
+         8: [6,7,9,10],
+         9: [6,7,8,10],
+         10: [6,8,9,0]}
 
 # create value graph
 """
 scaling = 10
 np.random.seed(2222)
-seeds = {2:.9,1:1,11:.1,12:.01}
+seeds = {2:.9,1:1,6:.1,7:.01}
 values = create_value_graph(graph, seeds, weight=.99, steps = 3000)
 values = {k:v*scaling for k,v in values.items()}
+cPickle.dump(values, open('values.pkl','wb'))
 """
 
 values = cPickle.load(open('values.pkl','rb'))
@@ -55,8 +71,9 @@ trials = gen_trials(graph, stims, n_structure_trials,
                     exp_stage='structure_learning')
 
 # start task
-task = valueStructure(subj, save_dir, stims, graph, values, [0,1,10,11],
-                      trials, familiarization_trials, True)
+# use seeds [0,1,10,11] for 15 node graph
+task = valueStructure(subj, save_dir, stims, graph, values, [0,1,6,7],
+                      trials, familiarization_trials, False)
 win = task.run_task()
 
 

@@ -36,7 +36,6 @@ taskdata = cPickle.load(open(path.join(data_loc,'taskdata.pkl'),'rb'))
 # visual style for graphs
 visual_style = {}
 colors = get_node_colors()
-visual_style['vertex_color'] = colors
 visual_style['vertex_size'] = 40
 visual_style['bbox'] = (600,600)
 visual_style['margin'] = 60
@@ -50,11 +49,12 @@ trials = structuredata
 g = graph_from_dict(graph)
 layout = g.layout('kk')
 nodes = [row['stim_index'] for i,row in trials.iterrows()]
+n_nodes = np.max(nodes)+1
 # visualization stuff
-g.vs['label'] = list(range(15))
+g.vs['label'] = list(range(n_nodes))
 # plot animations
-for i,n in enumerate(nodes[0:200]):
-    g.vs["color"] = ['yellow' if j == n else colors[j] for j in range(15)]
+for i,n in enumerate(nodes[0:100]):
+    g.vs["color"] = ['yellow' if j == n else colors[j] for j in range(n_nodes)]
     igraph.plot(g, layout=layout, target = 'graph_%s.png' % str(i).zfill(3),
                 edge_width=2, **visual_style)
 
@@ -71,6 +71,7 @@ subj_rating = valuedata.query('subjid=="%s"' % subj) \
                 .groupby('stim_index').rating.mean()
 values.update(subj_rating)
 g = graph_from_judgments(values)
+g.vs['color'] = colors
 weights = [i**3*4 for i in g.es['weight']]
 #value_layout = layout
 value_layout = g.layout_fruchterman_reingold(weights=g.es["weight"])
