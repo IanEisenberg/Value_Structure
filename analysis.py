@@ -17,7 +17,9 @@ node_lookup = {i:k for k,v in communities.items() for i in v }
 f = lambda x: [k for k,v in communities.items() if x in v][0]
 
 datafiles = sorted(glob('Data/RawData/*pkl'))
-datafiles = [i for i in datafiles if 'CH' not in i]
+for exclude in ['CH']:
+    datafiles = [i for i in datafiles if exclude not in i]
+
 for filey in datafiles:
     subj = path.basename(filey).split('_')[0]
     data = cPickle.load(open(filey,'rb'))
@@ -91,17 +93,17 @@ valuedata.to_csv(path.join(save_loc, 'valuedata.csv'))
 cPickle.dump(taskdata,open(path.join(save_loc,'taskdata.pkl'),'wb'))
 
 # **********Analysis*********************************
-data = structuredata.query('rt!=-1')
+regress_data = structuredata.query('rt!=-1')
 
 # structure reaction time data
 models = {}
 for DV in ['rt', 'np.log(rt)']:
     rs = smf.mixedlm("%s ~ community_cross + steps_since_seen" % DV, 
-                     data, groups=data["subjid"])
+                     regress_data, groups=regress_data["subjid"])
     # larger model
     rs_full = smf.mixedlm("%s ~ community_cross + steps_since_seen \
                           + correct_shift + C(rotation)" % DV, 
-                     data, groups=data["subjid"])
+                     regress_data, groups=regress_data["subjid"])
     DV_name = DV[-7:]
     models[DV_name] = rs
     models[DV_name + '_full'] = rs_full
