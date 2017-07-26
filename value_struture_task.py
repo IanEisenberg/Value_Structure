@@ -608,16 +608,16 @@ class valueStructure:
         self.presentInstruction(
             """
             Finished with the first part. In this second part you will
-            provide a value for each stimulus. The value of the 
-            stimuli were set before you started the experiment 
-            and were not based on their appearance.
+            provide a value for each stimulus. Importantly,
+            the value of the stimuli were set before you started 
+            the experiment and were not based on their appearance.
             
             Each stimulus is worth between 0 RMB and 10 RMB. 
             
             Q: How will you provide your value for each stimuli?
             
             A: We will ask you to bid on the different stimuli,
-                which we will explain how to bid on the next screen.
+                which we will on the next screen.
             
             When you are ready, press 5 to continue...
             """)
