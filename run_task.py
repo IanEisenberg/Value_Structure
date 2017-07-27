@@ -2,7 +2,7 @@ import cPickle
 import numpy as np
 import os
 from value_struture_task import valueStructure
-from utils import create_value_graph, gen_trials
+from utils import gen_trials
 
 
 # ************Experiment Setup********************************

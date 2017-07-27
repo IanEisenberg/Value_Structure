@@ -11,8 +11,8 @@ structuredata = []
 valuedata = []
 taskdata = {}
 communities = {0: [0,1,2,3,4],
-              1: [5,6,7,8,9],
-              2: [10,11,12,13,14]}
+              2: [5],
+              1: [6,7,8,9,10]}
 node_lookup = {i:k for k,v in communities.items() for i in v }
 f = lambda x: [k for k,v in communities.items() if x in v][0]
 
@@ -62,7 +62,9 @@ for filey in datafiles:
     # for value data
     # regress out accuracy
     structure_acc = subj_structuredata[200:].groupby('stim_index').correct.mean()
+    stim_freq = subj_structuredata.groupby('stim_index').rt.count()
     subj_valuedata.loc[:,'stim_acc'] = subj_valuedata.stim_index.apply(lambda x: structure_acc[x])
+    subj_valuedata.loc[:,'stim_freq'] = subj_valuedata.stim_index.apply(lambda x: stim_freq[x])
     rs = smf.ols('rating ~ stim_acc', subj_valuedata).fit()
     subj_valuedata.loc[:,'reg_rating'] = rs.resid
     
@@ -94,23 +96,27 @@ valuedata.to_csv(path.join(save_loc, 'valuedata.csv'))
 cPickle.dump(taskdata,open(path.join(save_loc,'taskdata.pkl'),'wb'))
 
 # **********Analysis*********************************
-regress_data = structuredata.query('rt!=-1')
+regress_data = structuredata.query('rt!=-1').dropna(subset=['correct_shift'])
+
 # regress_data = structuredata.query('rt!=-1 and correct==True')
 
 # structure reaction time data
 models = {}
 for DV in ['rt', 'np.log(rt)']:
     rs = smf.mixedlm("%s ~ community_cross + steps_since_seen" % DV, 
-                     regress_data, groups=regress_data["subjid"])
+                     data=regress_data, groups='subjid',
+                     re_formula="~community_cross")
     # larger model
     rs_full = smf.mixedlm("%s ~ community_cross + steps_since_seen \
                           + correct_shift + C(rotation) + congruent_rot" % DV, 
-                     regress_data, groups=regress_data["subjid"])
+                     data=regress_data, groups=regress_data["subjid"],
+                     re_formula="~community_cross")
     DV_name = DV[-7:]
     models[DV_name] = rs
     models[DV_name + '_full'] = rs_full
     
-structure_coefficients = models['rt_full'].random_effects
+raneffects = models['rt_full'].fit().random_effects
+structure_coefficients = {k:v.loc['community_cross[T.True]'] for k,v in raneffects.items()}
 
 # structure data win stay/lose switch (or just change in attention following error?)
 for rot in [0,90]:

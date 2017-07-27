@@ -27,6 +27,8 @@ sns.plt.xlabel('value Rating', fontsize = 18)
 sns.plt.title('Value Rating as a function of Community',
               fontsize = 22)
 
+sns.boxplot('stim_repetition','reg_rating',data=valuedata, hue = 'community')
+
 # plot based on average community value
 valuedata.loc[:,'avg_community_value'] = \
         valuedata.community.apply(
@@ -37,5 +39,6 @@ colors = get_node_colors()
 for group in valuedata.groupby('stim_index'):
     stim_i = int(group[0])
     subset = group[1]
-    sns.kdeplot(subset.rating, label = label, 
+    sns.kdeplot(subset.rating, label = stim_i, 
                 linewidth=3, color = colors[stim_i])
+

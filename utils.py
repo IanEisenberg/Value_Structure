@@ -72,7 +72,7 @@ def gen_trials(graph, stims, trial_count=100, duration=1.5, exp_stage=None,
         trials.append(trial)
     return trials
 
-def get_node_colors(nodes=11):
+def get_node_colors(nodes=11, subset=None):
     c_colors = [[.8,0,.2], [0,.8,.4], [0,.1,1]]
     if nodes == 15:
         colors = [c_colors[0]]*5 + [c_colors[1]]*5 + [c_colors[2]]*5
@@ -88,4 +88,6 @@ def get_node_colors(nodes=11):
         colors[4] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[1])]
         colors[6] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[1])]
         colors[10] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[0])]
+    if subset:
+        colors = [c for i,c in enumerate(colors) if i in subset]
     return colors
