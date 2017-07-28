@@ -72,22 +72,33 @@ def gen_trials(graph, stims, trial_count=100, duration=1.5, exp_stage=None,
         trials.append(trial)
     return trials
 
+def get_lower(mat):
+    return mat[np.tril_indices_from(mat,-1)]
+    
 def get_node_colors(nodes=11, subset=None):
+    w1 = .67; w2 = .33
     c_colors = [[.8,0,.2], [0,.8,.4], [0,.1,1]]
     if nodes == 15:
         colors = [c_colors[0]]*5 + [c_colors[1]]*5 + [c_colors[2]]*5
-        colors[0] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[2])]
-        colors[4] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[1])]
-        colors[5] = [i*.7+y*.3 for i,y in zip(c_colors[1],c_colors[0])]
-        colors[9] = [i*.7+y*.3 for i,y in zip(c_colors[1],c_colors[2])]
-        colors[10] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[1])]
-        colors[14] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[0])]
+        colors[0] = [i*w1+y*w2 for i,y in zip(c_colors[0],c_colors[2])]
+        colors[4] = [i*w1+y*w2 for i,y in zip(c_colors[0],c_colors[1])]
+        colors[5] = [i*w1+y*w2 for i,y in zip(c_colors[1],c_colors[0])]
+        colors[9] = [i*w1+y*w2 for i,y in zip(c_colors[1],c_colors[2])]
+        colors[10] = [i*w1+y*w2 for i,y in zip(c_colors[2],c_colors[1])]
+        colors[14] = [i*w1+y*w2 for i,y in zip(c_colors[2],c_colors[0])]
     elif nodes == 11:
         colors = [c_colors[0]]*5 + [c_colors[1]] + [c_colors[2]]*5
-        colors[0] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[2])]
-        colors[4] = [i*.7+y*.3 for i,y in zip(c_colors[0],c_colors[1])]
-        colors[6] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[1])]
-        colors[10] = [i*.7+y*.3 for i,y in zip(c_colors[2],c_colors[0])]
+        colors[0] = [i*w1+y*w2 for i,y in zip(c_colors[0],c_colors[2])]
+        colors[4] = [i*w1+y*w2 for i,y in zip(c_colors[0],c_colors[1])]
+        colors[6] = [i*w1+y*w2 for i,y in zip(c_colors[2],c_colors[1])]
+        colors[10] = [i*w1+y*w2 for i,y in zip(c_colors[2],c_colors[0])]
     if subset:
         colors = [c for i,c in enumerate(colors) if i in subset]
     return colors
+
+def scale(lst):
+    lst_max = np.max(lst)
+    lst_min = np.min(lst)
+    scaled = list((np.array(lst)-lst_min)/(lst_max-lst_min))
+    return scaled
+    

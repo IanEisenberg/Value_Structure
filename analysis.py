@@ -1,15 +1,18 @@
 import cPickle
 from glob import glob
+from itertools import permutations
 import numpy as np
 from numpy import log
 from os import path
 import pandas as pd
 import statsmodels.formula.api as smf
+from utils import scale
 
 # **********Processing*********************************
 structuredata = []
 valuedata = []
 taskdata = {}
+winning = {}
 communities = {0: [0,1,2,3,4],
               2: [5],
               1: [6,7,8,9,10]}
@@ -29,7 +32,6 @@ for filey in datafiles:
     subj_valuedata.loc[:,'subjid'] = subj
     
     # add subject specific variables
-    
     # for structuredata
     subj_structuredata.loc[:,'correct_shift'] = subj_structuredata.correct.shift()
     subj_structuredata.loc[:,'congruent_rot'] = subj_structuredata.rotation==subj_structuredata.rotation.shift()
@@ -67,7 +69,6 @@ for filey in datafiles:
     subj_valuedata.loc[:,'stim_freq'] = subj_valuedata.stim_index.apply(lambda x: stim_freq[x])
     rs = smf.ols('rating ~ stim_acc', subj_valuedata).fit()
     subj_valuedata.loc[:,'reg_rating'] = rs.resid
-    
     # add stim repetitions
     n_stim = len(np.unique(subj_valuedata.stim_index))
     n_repeats = (len(subj_valuedata))//n_stim
@@ -85,24 +86,26 @@ for filey in datafiles:
     structuredata.append(subj_structuredata)
     valuedata.append(subj_valuedata)
     taskdata[subj] = data['taskdata']
-
+    winning[subj] = data['total_win']
+    
 structuredata = pd.concat(structuredata, axis=0)
 valuedata = pd.concat(valuedata, axis=0)
 
-# save data
-save_loc = path.join('Data','ProcessedData')
-structuredata.to_csv(path.join(save_loc, 'structuredata.csv'))
-valuedata.to_csv(path.join(save_loc, 'valuedata.csv'))
-cPickle.dump(taskdata,open(path.join(save_loc,'taskdata.pkl'),'wb'))
+# Remove subjects who had no variability on their ratings
+rating_variability = valuedata.groupby(['subjid']).rating.std()
+drop_subjects = list(rating_variability.index[rating_variability<.1])
+valuedata = valuedata.query('subjid not in %s' % drop_subjects)
+structuredata = structuredata.query('subjid not in %s' % drop_subjects)
 
 # **********Analysis*********************************
-regress_data = structuredata.query('rt!=-1').dropna(subset=['correct_shift'])
+results = {}
 
-# regress_data = structuredata.query('rt!=-1 and correct==True')
+regress_data = structuredata.query('rt!=-1').dropna(subset=['correct_shift'])
+#regress_data = structuredata.query('rt!=-1 and correct==True').dropna(subset=['correct_shift'])
 
 # structure reaction time data
 models = {}
-for DV in ['rt', 'np.log(rt)']:
+for DV in ['rt']:
     rs = smf.mixedlm("%s ~ community_cross + steps_since_seen" % DV, 
                      data=regress_data, groups='subjid',
                      re_formula="~community_cross")
@@ -114,9 +117,52 @@ for DV in ['rt', 'np.log(rt)']:
     DV_name = DV[-7:]
     models[DV_name] = rs
     models[DV_name + '_full'] = rs_full
+
+# individual difference variables
+rt_raneffects = models['rt_full'].fit().random_effects
+structure_coefficients = {k:v.loc['community_cross[T.True]'] for k,v in rt_raneffects.items()}
+results['structure_coefficients'] = structure_coefficients
+
+# value effect as a function of community
+valuedata.loc[:,'structure_coefficient'] = valuedata.subjid.apply(lambda x: structure_coefficients[x])
+value_rs = smf.mixedlm('rating ~ C(community)+ stim_acc + C(stim_file)', 
+                 data = valuedata.query('community!=2'), 
+                 groups='subjid', re_formula="~C(community)").fit()
+
+interaction_value_rs = smf.mixedlm('rating ~ C(community)*structure_coefficient + stim_acc + C(stim_file)', 
+                 data = valuedata.query('community!=2'), 
+                 groups='subjid').fit()
+
+value_raneffects = value_rs.random_effects
+value_coefficients = {k:v.loc['C(community)[T.1]'] for k,v in value_raneffects.items()}
+results['value_coefficients'] = value_coefficients
+
+# calculate standard deviation of clusters within community
+group_stats = {}
+for subj in valuedata.subjid.unique():
+    subj_stats = {}
+    permutes = list(permutations(range(7),7))
+    ratings = valuedata.query('subjid == "%s"' % subj) \
+                        .groupby(['subjid','stim_index','community']) \
+                        .mean().loc[:,['rating','reg_rating']].reset_index()
     
-raneffects = models['rt_full'].fit().random_effects
-structure_coefficients = {k:v.loc['community_cross[T.True]'] for k,v in raneffects.items()}
+    std_community = (ratings.query('community != 2').query('community != 2') \
+                    .groupby(['subjid','community']) \
+                    .reg_rating.std()).groupby('community').mean().mean()
+    subj_stats['community_std'] = std_community
+    permute_stds = []
+    for permute in permutes:
+        n = len(ratings.subjid.unique())
+        permute_pop = ratings.copy().reset_index()
+        permute_pop.loc[:, 'community'] = permute_pop.community.iloc[list(permute)].reset_index()
+        permute_std = (permute_pop.groupby(['subjid','community']).reg_rating.std()).groupby('community').mean().mean()
+        permute_stds.append(permute_std)
+    subj_stats['permuted_array']  = permute_stds
+    subj_stats['p_val'] = np.mean([std_community>=i for i in permute_stds])
+    group_stats[subj] = subj_stats
+
+results['clustering'] = {k:v['p_val'] for k,v in group_stats.items()}
+results['example_clustering_dist'] = group_stats.values()[0]['permuted_array']
 
 # structure data win stay/lose switch (or just change in attention following error?)
 for rot in [0,90]:
@@ -129,9 +175,12 @@ for rot in [0,90]:
             .groupby(['correct_shift','rotation']).rt.median()
 
 
-
-
-
+# save data
+save_loc = path.join('Data','ProcessedData')
+structuredata.to_csv(path.join(save_loc, 'structuredata.csv'))
+valuedata.to_csv(path.join(save_loc, 'valuedata.csv'))
+cPickle.dump(taskdata,open(path.join(save_loc,'taskdata.pkl'),'wb'))
+cPickle.dump(results, open(path.join('Analysis_Results','analysis.pkl'), 'wb'))
 
 
 

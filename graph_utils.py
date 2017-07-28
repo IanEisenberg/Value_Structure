@@ -28,9 +28,12 @@ def adj_from_judgments(value_graph):
     adj = pd.DataFrame(adj, index=value_graph.keys(), columns=value_graph.keys())
     return adj
 
-def average_adjs(adjs):
-    adjs = adjs.values()
+def average_adjs(adjs, weights=None):
+    subjs, adjs = zip(*adjs.items())
     adj_matrices = [i.as_matrix() for i in adjs]
+    if weights:
+        weights = [weights[s] for s in subjs]        
+        adj_matrices = [adj*weights[i] for i,adj in enumerate(adj_matrices)]
     avg = np.mean(adj_matrices, axis=0)
     avg = pd.DataFrame(avg, index=adjs[0].index, columns=adjs[0].columns)
     return avg
