@@ -1,5 +1,7 @@
+from itertools import permutations
 import numpy as np
 import pandas as pd
+import random as r
 
 # **********HELPER FUNCTIONS ***********************************
 def create_value_graph(graph, seeds, weight = .95, steps = 1000):
@@ -48,9 +50,40 @@ def gen_balanced_sequence(graph, repetitions):
     sequence=list(graph.keys())*repetitions
     np.random.shuffle(sequence)
     return sequence
+
+def gen_RL_trials(stims, values, duration=1.5, max_repeat=2, seed=None):
+    if seed:
+        np.random.seed(seed)
+    stim_rollout = [[1,13], # 1> 13
+                    [5,9], # 5 > 9
+                    [6,8], # 6 > 8
+                    [2,7,12], # 2 > 7 > 12
+                    [0,3,11,14], # 0 > 3 > 11 > 14
+                    [4,10] # 4 > 10
+                    ]
+    trials = []
+    while len(stim_rollout) > 0:
+        available_stims = stim_rollout.pop(0)
+        permutes = list(permutations(available_stims,2)) * max_repeat
+        np.random.shuffle(permutes)
+        for stim1, stim2 in permutes:
+            rewards = [r.random() < v for v in [values[stim1], values[stim2]]]
+            trial = {'stim_indices': [stim1, stim2],
+                     'stim_files': [stims[stim1], stims[stim2]],
+                     'rewards': rewards,
+                     'duration': duration,
+                     'stim_set': available_stims}
+            trials.append(trial)
+    np.random.seed()
+    return trials
     
-def gen_trials(graph, stims, trial_count=100, duration=1.5, exp_stage=None,
-               balanced=False):
+
+    
+    
+def gen_structure_trials(graph, stims, trial_count=100, duration=1.5, 
+                         exp_stage=None, balanced=False, seed=None):
+    if seed:
+        np.random.seed(seed)
     if not balanced:
         sequence = gen_sequence(graph, trial_count)
     else:
@@ -70,8 +103,16 @@ def gen_trials(graph, stims, trial_count=100, duration=1.5, exp_stage=None,
                  'rotation': stim_rotations[stim_i].pop(),
                  'exp_stage': exp_stage}
         trials.append(trial)
+    np.random.seed()
     return trials
-
+    
+def list_get(lst, elem, default=-1):
+        try:
+            thing_index = lst.index(elem)
+            return thing_index
+        except ValueError:
+            return default
+            
 def get_lower(mat):
     return mat[np.tril_indices_from(mat,-1)]
     

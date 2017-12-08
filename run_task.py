@@ -1,13 +1,14 @@
 import cPickle
 import numpy as np
 import os
-from value_struture_task import valueStructure
-from utils import gen_trials
+from BdmProcedure import BdmProcedure
+from StructureTask import StructureTask
+from utils import gen_RL_trials, gen_structure_trials
 
 
 # ************Experiment Setup********************************
 # subject parameters
-subj = raw_input('subject id: ')
+subj = '999' #raw_input('subject id: ')
 save_dir = os.path.join('Data')
 n_structure_trials = 1000
 n_familiarization_trials = 20
@@ -15,10 +16,8 @@ n_familiarization_trials = 20
 
 
 # set up and shuffle stims
-stims = ['images/%s.png' % i for i in range(1,12)]
-np.random.shuffle(stims)
+
 # graph structure
-"""
 # 15 node graph
 graph = {0: [1,2,3,14],
          1: [0,2,3,4],
@@ -35,23 +34,13 @@ graph = {0: [1,2,3,14],
          12: [10,11,13,14],
          13: [10,11,12,14],
          14: [11,12,13,0]}
-"""
-# 11 node graph
-graph = {0: [1,2,3,10],
-         1: [0,2,3,4],
-         2: [0,1,3,4],
-         3: [0,1,2,4],
-         4: [1,2,3,5],
-         5: [4,6],
-         6: [5,7,8,9],
-         7: [6,8,9,10],
-         8: [6,7,9,10],
-         9: [6,7,8,10],
-         10: [6,8,9,0]}
+stims = ['images/%s.png' % str(i+1) for i in graph.keys()]
+np.random.shuffle(stims)
+
 
 # create value graph
 """
-scaling = 10
+scaling = 1
 np.random.seed(2222)
 seeds = {2:.9,1:1,6:.1,7:.01}
 values = create_value_graph(graph, seeds, weight=.99, steps = 3000)
@@ -62,18 +51,39 @@ cPickle.dump(values, open('values.pkl','wb'))
 values = cPickle.load(open('values.pkl','rb'))
 
 # set up trials
-familiarization_trials = gen_trials(graph, stims, n_familiarization_trials, 
-                                    duration=None,
-                                    exp_stage='familiarization_test',
-                                    balanced=True)
+familiarization_trials = gen_structure_trials(graph, 
+                                              stims, 
+                                              n_familiarization_trials, 
+                                              duration=None,
+                                              exp_stage='familiarization_test',
+                                              balanced=True)
 
-trials = gen_trials(graph, stims, n_structure_trials, 
-                    exp_stage='structure_learning')
+structure_trials = gen_structure_trials(graph, 
+                                        stims, 
+                                        n_structure_trials, 
+                                        exp_stage='structure_learning')
+
+RL_trials = gen_RL_trials(stims, values, max_repeat=100)
+
 
 # start task
 # use seeds [0,1,10,11] for 15 node graph
-task = valueStructure(subj, save_dir, stims, graph, values, [0,1,6,7],
-                      trials, familiarization_trials, True)
-win = task.run_task()
+structure = StructureTask(subjid=subj, 
+                      save_dir=save_dir, 
+                      stim_files=stims, 
+                      graph=graph, 
+                      trials=structure_trials, 
+                      familiarization_trials=familiarization_trials, 
+                      fullscreen=False)
+
+                      
+
+bdm = BdmProcedure(subjid=subj, 
+                          save_dir=save_dir, 
+                          stim_files=stims, 
+                          values=values, 
+                          labeled_nodes=[0,1,6,7],
+                          fullscreen=False)
+win = structure.run_task()
 
 
