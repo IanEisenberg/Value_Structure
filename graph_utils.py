@@ -2,13 +2,33 @@ import igraph
 import numpy as np
 import pandas as pd
 
-def graph_from_dict(graph_dict):
+def graph_from_dict(graph_dict, values=None):
     g = igraph.Graph()
     g.add_vertices(list(set(list(graph_dict.keys()) 
                    + list([a for v in graph_dict.values() for a in v]))))
     g.add_edges([(v, a) for v in graph_dict.keys() for a in graph_dict[v]])
+    if values:
+        for key, value in values.items():
+            vert = [v for v in g.vs if v['name']==key][0]
+            vert['value'] = value
     return g
 
+    
+def plot_graph(g, values=None):
+    if values:
+        vals = [i[1] for i in sorted(values.items(), key=lambda x: x[0])]
+        colors = [[i,0,1-i] for i in vals]
+    else:
+        colors = [[1,0,0]*5, [0,1,0]*5, [0,0,1]*5]
+    visual_style = {}
+    visual_style["vertex_size"] = 20
+    visual_style["vertex_color"] = colors
+    visual_style["bbox"] = (300, 300)
+    visual_style["margin"] = 20
+    igraph.plot(g, **visual_style)
+        
+
+# old functions
 def adj_from_judgments(value_graph):
     from itertools import combinations
     value_graph = value_graph.copy()

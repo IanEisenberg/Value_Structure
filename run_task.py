@@ -2,8 +2,9 @@ import cPickle
 import numpy as np
 import os
 from BdmProcedure import BdmProcedure
+from RLTask import RLTask
 from StructureTask import StructureTask
-from utils import gen_RL_trials, gen_structure_trials
+from utils import create_value_graph, gen_RL_trials, gen_structure_trials
 
 
 # ************Experiment Setup********************************
@@ -39,16 +40,13 @@ np.random.shuffle(stims)
 
 
 # create value graph
-"""
+
 scaling = 1
 np.random.seed(2222)
 seeds = {2:.9,1:1,6:.1,7:.01}
 values = create_value_graph(graph, seeds, weight=.99, steps = 3000)
 values = {k:v*scaling for k,v in values.items()}
-cPickle.dump(values, open('values.pkl','wb'))
-"""
 
-values = cPickle.load(open('values.pkl','rb'))
 
 # set up trials
 familiarization_trials = gen_structure_trials(graph, 
@@ -78,12 +76,14 @@ structure = StructureTask(subjid=subj,
 
                       
 
-bdm = BdmProcedure(subjid=subj, 
-                          save_dir=save_dir, 
-                          stim_files=stims, 
-                          values=values, 
-                          labeled_nodes=[0,1,6,7],
-                          fullscreen=False)
-win = structure.run_task()
+structure.run_task()
 
 
+RLtask = RLTask(subjid=subj,
+                save_dir=save_dir,
+                stim_files=stims,
+                graph=graph,
+                trials=RL_trials,
+                fullscreen=False)
+
+points = RLtask.run_task()

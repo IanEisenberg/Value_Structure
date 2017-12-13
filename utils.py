@@ -61,21 +61,43 @@ def gen_RL_trials(stims, values, duration=1.5, max_repeat=2, seed=None):
                     [0,3,11,14], # 0 > 3 > 11 > 14
                     [4,10] # 4 > 10
                     ]
-    trials = []
+                    
+    all_trials = []
     while len(stim_rollout) > 0:
+        # get trials per condition
+        trials = []
         available_stims = stim_rollout.pop(0)
         permutes = list(permutations(available_stims,2)) * max_repeat
         np.random.shuffle(permutes)
         for stim1, stim2 in permutes:
-            rewards = [r.random() < v for v in [values[stim1], values[stim2]]]
+            stim_values =  [values[stim1], values[stim2]]
+            rewards = [int(r.random() < v) for v in stim_values]
             trial = {'stim_indices': [stim1, stim2],
                      'stim_files': [stims[stim1], stims[stim2]],
                      'rewards': rewards,
+                     'values': stim_values,
+                     'correct_choice': int(stim_values[1] > stim_values[0]),
                      'duration': duration,
                      'stim_set': available_stims}
             trials.append(trial)
+        all_trials.append(trials)
+    # add final section with all stims
+    trials = []
+    available_stims = values.keys()
+    permutes = list(permutations(available_stims,2))
+    np.random.shuffle(permutes)
+    for stim1, stim2 in permutes:
+        rewards = [r.random() < v for v in [values[stim1], values[stim2]]]
+        trial = {'stim_indices': [stim1, stim2],
+                 'stim_files': [stims[stim1], stims[stim2]],
+                 'rewards': rewards,
+                 'duration': duration,
+                 'stim_set': available_stims}
+        trials.append(trial)
+    all_trials.append(trials)
+    
     np.random.seed()
-    return trials
+    return all_trials
     
 
     

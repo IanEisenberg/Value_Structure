@@ -28,6 +28,7 @@ class StructureTask(BaseExp):
         # set up "holder" variables
         self.structuredata = []  
         self.pointtracker = 0
+        self.trialnum = 0
         self.startTime = []
         
         # set up argument variables
@@ -316,8 +317,6 @@ class StructureTask(BaseExp):
                 'graph': self.graph,
                 'action_keys': self.action_keys
                 } 
-        otherdata = {'structuredata': self.structuredata,
-                     'total_win': self.total_win}
+        otherdata = {'structuredata': self.structuredata}
         self.writeData(taskdata, otherdata)
-        return self.total_win
 

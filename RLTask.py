@@ -25,14 +25,17 @@ class RLTask(BaseExp):
                  trials, fullscreen = False):
         super(RLTask, self).__init__(subjid, save_dir, fullscreen)
         # set up "holder" variables
-        self.rldata = []  
+        self.RLdata = []  
+        self.trialnum = 0
         self.pointtracker = 0
+        self.correct_tracker = 0 # used to determine when to switch stim set
+        self.correct_thresh = 5
         self.startTime = []
         
         # set up argument variables
         self.graph = graph
         self.stim_files = stim_files
-        self.trials = trials
+        self.all_trials = trials
         
         # set up static variables
         self.action_keys = ['left','right']
@@ -87,19 +90,21 @@ class RLTask(BaseExp):
             positions.append(stim_pos)
         return banner
         
-    def presentStim(self, stim_file, rotation, textstim=None, duration=None,
-                    correct_choice=None):
-        error_sound = sound.Sound(secs=.1,value=500)
+    def presentStim(self, stim_files, textstim=None, duration=None):
         size = self.stim_size
         # present stim
-        if rotation==90:
-            size = size[::-1]
-        stim = visual.ImageStim(self.win, 
-                                image=stim_file,
-                                ori=rotation,
+
+        stim1 = visual.ImageStim(self.win, 
+                                image=stim_files[0],
                                 units='norm',
+                                pos=(-.3,0),
                                 size = size)
-        stim.draw()
+        stim2 = visual.ImageStim(self.win, 
+                                image=stim_files[1],
+                                units='norm',
+                                pos=(.3,0),
+                                size = size)
+        stim1.draw(); stim2.draw()
         if textstim:
             textstim.draw()
         self.win.flip()
@@ -112,9 +117,6 @@ class RLTask(BaseExp):
                                      timeStamped=stim_clock)
                 for key,response_time in keys:
                     self.checkRespForQuitKey(key)
-                    if correct_choice:
-                        if key!=correct_choice and len(recorded_keys)==0:
-                            error_sound.play()
                     recorded_keys+=keys
         else:
             while len(recorded_keys) == 0:
@@ -122,9 +124,6 @@ class RLTask(BaseExp):
                                      timeStamped=stim_clock)
                 for key,response_time in keys:
                     self.checkRespForQuitKey(key)
-                    if correct_choice:
-                        if key!=correct_choice and len(recorded_keys)==0:
-                            error_sound.play()
                     recorded_keys+=keys
                     
         return recorded_keys
@@ -137,86 +136,79 @@ class RLTask(BaseExp):
         """
         trialClock = core.Clock()
         self.trialnum += 1
-        trial['correct'] = False
+        trial['rewarded'] = False
         trial['onset']=core.getTime() - self.startTime
         trial['response'] = -1
         trial['rt'] = -1
         trial['secondary_responses'] = []
         trial['secondary_rts'] = []
         trial['trialnum'] = self.trialnum
-        correct_choice = self.action_keys[[0,90].index(trial['rotation'])]
         # present stimulus and get response
         event.clearEvents()
         trialClock.reset()
-        keys = self.presentStim(trial['stim_file'], 
-                                trial['rotation'],
-                                duration = trial['duration'],
-                                correct_choice=correct_choice)
+        keys = self.presentStim(trial['stim_files'], 
+                                duration = trial['duration'])
         if len(keys)>0:
             first_key = keys[0]
-            choice = ['unrot','rot'][self.action_keys.index(first_key[0])]
+            # which did they choose
+            choice = self.action_keys.index(first_key[0])
             # record response
             trial['response'] = choice
             trial['rt'] = first_key[1]
             # record any responses after the first
             trial['secondary_responses']=[i[0] for i in keys[1:]]
             trial['secondary_rts']=[i[1] for i in keys[1:]]
-            if correct_choice == first_key[0]:
-                trial['correct']=True
-                # record points for bonus
-                self.pointtracker += 1
+            trial['rewarded'] = trial['rewards'][choice]
+            trial['correct'] = trial['correct_choice'] == choice
+            self.pointtracker += trial['rewarded']
+            if trial['correct']:
+                self.correct_tracker += 1
+            else:
+                self.correct_tracker = 0
         else:
-            miss_sound = sound.Sound(secs=.1,value=700)
-            miss_sound.play()
+            print('missed')
+            #miss_sound = sound.Sound(secs=.1,value=700)
+            #miss_sound.play()
             core.wait(.5)
                 
         # log trial and add to data
         self.writeToLog(json.dumps(trial))
-        self.structuredata.append(trial)
+        self.RLdata.append(trial)
         return trial
     
-    
-    def run_familiarization(self):
-        i=0
-        stims = sample(self.stim_files, len(self.stim_files))
-        while i<len(stims)*2:
-            filey = stims[i//2]
-            text = ['Unrotated','Rotated'][i%2==1]
-            textstim = visual.TextStim(self.win, text, pos=[0,.5], units='norm')
-            keys = self.presentStim(filey, [0,90][i%2==1], textstim)
-            if keys[0][0] == 'right':
-                i+=1
-            elif i>0:
-                i-=1
-                
-    def run_familiarization_test(self):
-        np.random.shuffle(self.familiarization_trials)
-        for trial in self.familiarization_trials:
-            trial['rotation'] = np.random.choice([0,90])
-            self.presentTrial(trial)
+ 
+
                             
-    def run_graph_learning(self):
+    def run_RLtask(self):
         # show beeps
-        self.presentInstruction('Press 5 to hear the error beep')
-        error_sound = sound.Sound(secs=.1,value=500)
-        error_sound.play(); core.wait(.5)
-        self.presentInstruction('Press 5 to hear the "miss" beep')
-        error_sound = sound.Sound(secs=.1,value=700)
-        error_sound.play(); core.wait(.5)
         self.presentInstruction('Press 5 to start')
         # start graph learning
-        pause_trials = (len(self.trials)/3, len(self.trials)/3*2)
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
-        for i,trial in enumerate(self.trials):
-            self.presentTrial(trial)
-            if i in pause_trials:
+        
+        #
+        for i, trial_set in enumerate(self.all_trials[:-1]):
+            if i == 3:
                 self.presentInstruction(
                         """
                         Take a break!
                                         
                         Press 5 when you are ready to continue
                         """)
+            for i,trial in enumerate(trial_set):
+                self.presentTrial(trial)
+                if self.correct_tracker >= self.correct_thresh:
+                    break
+        # another break
+        self.presentInstruction(
+                    """
+                    Take a break!
+                                    
+                    Press 5 when you are ready to continue
+                    """)
+        # final trials
+        for i,trial in enumerate(trial_set[-1]):
+                self.presentTrial(trial)
         
     def run_task(self, pause_trials = None):
         self.setupWindow()
@@ -238,84 +230,15 @@ class RLTask(BaseExp):
             Press 5 to continue...
             """)
                 
-        self.presentInstruction(
-            """
-            In the first part of this study, stimuli
-            will be shown one at a time for a short 
-            amount of time.
-            
-            Your task is to indicated whether 
-            each stimulus is rotated or unrotated.
-            
-            We will start by familiarizing you with the 
-            stimuli. Press the left and right keys to 
-            move through the stimuli.
-            
-            Press 5 to continue...
-            """)
-        
-        if self.test_familiarization == True:
-            learned=False
-            while not learned:
-                self.run_familiarization()
-                self.presentInstruction(
-                    """
-                    We will now practice responding to the stimuli. 
-                    Indicate whether the stimulus is unrotated or rotated.
-                    
-                            %s key: Unrotated
-                            %s key: Rotated
-                            
-                    Press 5 to continue...
-                    """ % (self.action_keys[0], self.action_keys[1]))
-                self.run_familiarization_test()
-                acc = np.mean([t['correct'] for t in self.structuredata 
-                               if t['exp_stage'] == 'familiarization_test'])
-                if acc>.75:
-                    learned=True
-                else:
-                    self.presentInstruction(
-                        """
-                        Seems you could use a refresher! Please look over the
-                        stimuli again and try to remember which way the stimulus
-                        is unrotated
-                        
-                        Press 5 to continue...
-                        """)
-        else:
-            self.run_familiarization()
-                
-        # structure learning 
-        self.presentInstruction(
-            """
-            Finished with familiarization. In the next section, 
-            indicated whether the stimulus is unrotated or rotated.
-            
-                %s key: Unrotated
-                %s key: Rotated
-            
-            Each stimulus will only come up on the screen for a short 
-            amount of time. Please respond as quickly and accurately 
-            as possible.
-            
-            You will hear a beep if you choose incorrectly or miss
-            a response.
-            
-            This section takes a long time, so there will be two
-            breaks.
-            
-            Press 5 to continue...
-            """ % (self.action_keys[0], self.action_keys[1]))
-        
-        self.run_graph_learning()
+        self.run_RLtask()
         
         # clean up and save
         taskdata = {
                 'graph': self.graph,
                 'action_keys': self.action_keys
                 } 
-        otherdata = {'structuredata': self.structuredata,
-                     'total_win': self.total_win}
+        otherdata = {'RLdata': self.RLdata,
+                     'total_points': self.pointtracker}
         self.writeData(taskdata, otherdata)
-        return self.total_win
+        return self.pointtracker
 
