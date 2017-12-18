@@ -51,7 +51,8 @@ def gen_balanced_sequence(graph, repetitions):
     np.random.shuffle(sequence)
     return sequence
 
-def gen_RL_trials(stims, values, duration=1.5, max_repeat=2, seed=None):
+def gen_RL_trials(stims, values, duration=2, feedback_duration=1,
+                  max_repeat=2, seed=None):
     if seed:
         np.random.seed(seed)
     stim_rollout = [[1,13], # 1> 13
@@ -78,6 +79,7 @@ def gen_RL_trials(stims, values, duration=1.5, max_repeat=2, seed=None):
                      'values': stim_values,
                      'correct_choice': int(stim_values[1] > stim_values[0]),
                      'duration': duration,
+                     'feedback_duration': feedback_duration,
                      'stim_set': available_stims}
             trials.append(trial)
         all_trials.append(trials)
@@ -92,6 +94,7 @@ def gen_RL_trials(stims, values, duration=1.5, max_repeat=2, seed=None):
                  'stim_files': [stims[stim1], stims[stim2]],
                  'rewards': rewards,
                  'duration': duration,
+                 'feedback_duration': feedback_duration,
                  'stim_set': available_stims}
         trials.append(trial)
     all_trials.append(trials)
@@ -103,7 +106,7 @@ def gen_RL_trials(stims, values, duration=1.5, max_repeat=2, seed=None):
     
     
 def gen_structure_trials(graph, stims, trial_count=100, duration=1.5, 
-                         exp_stage=None, balanced=False, seed=None):
+                         exp_stage=None, balanced=False,  seed=None):
     if seed:
         np.random.seed(seed)
     if not balanced:

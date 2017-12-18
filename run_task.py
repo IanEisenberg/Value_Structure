@@ -41,11 +41,12 @@ np.random.shuffle(stims)
 
 # create value graph
 
-scaling = 1
+scaling = .8
+offset = .1
 np.random.seed(2222)
 seeds = {2:.9,1:1,6:.1,7:.01}
 values = create_value_graph(graph, seeds, weight=.99, steps = 3000)
-values = {k:v*scaling for k,v in values.items()}
+values = {k:v*scaling+offset for k,v in values.items()}
 
 
 # set up trials

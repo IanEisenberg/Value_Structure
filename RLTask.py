@@ -12,9 +12,7 @@ generic task using psychopy
 from BaseExp import BaseExp
 import json
 import numpy as np
-from psychopy import prefs
-prefs.general['audioLib'] = ['sounddevice']
-from psychopy import visual, core, event, sound
+from psychopy import visual, core, event
 from random import sample
 
 class RLTask(BaseExp):
@@ -29,7 +27,7 @@ class RLTask(BaseExp):
         self.trialnum = 0
         self.pointtracker = 0
         self.correct_tracker = 0 # used to determine when to switch stim set
-        self.correct_thresh = 5
+        self.correct_thresh = 10
         self.startTime = []
         
         # set up argument variables
@@ -39,9 +37,6 @@ class RLTask(BaseExp):
         
         # set up static variables
         self.action_keys = ['left','right']
-        np.random.shuffle(self.action_keys)
-        self.n_value_ratings = 3
-        self.test_familiarization = False
             
     #**************************************************************************
     # ******* Display Functions **************
@@ -93,21 +88,25 @@ class RLTask(BaseExp):
     def presentStim(self, stim_files, textstim=None, duration=None):
         size = self.stim_size
         # present stim
-
+        positions = [(-.3,0), (.3,0)]
         stim1 = visual.ImageStim(self.win, 
                                 image=stim_files[0],
                                 units='norm',
-                                pos=(-.3,0),
+                                pos=positions[0],
                                 size = size)
         stim2 = visual.ImageStim(self.win, 
                                 image=stim_files[1],
                                 units='norm',
-                                pos=(.3,0),
+                                pos=positions[1],
                                 size = size)
-        stim1.draw(); stim2.draw()
-        if textstim:
-            textstim.draw()
-        self.win.flip()
+        def draw_stim(other_stim=None):
+            stim1.draw(); stim2.draw()
+            if other_stim:
+                other_stim.draw()
+            if textstim:
+                textstim.draw()
+            self.win.flip()
+        draw_stim()
         # get response
         recorded_keys = []
         stim_clock = core.Clock()
@@ -117,6 +116,13 @@ class RLTask(BaseExp):
                                      timeStamped=stim_clock)
                 for key,response_time in keys:
                     self.checkRespForQuitKey(key)
+                    if len(recorded_keys) == 0:
+                        choice = self.action_keys.index(key)
+                        choice_box = visual.Circle(self.win,
+                                                 size=size,
+                                                 lineWidth=10,
+                                                 pos=positions[choice])
+                        draw_stim(other_stim = choice_box)
                     recorded_keys+=keys
         else:
             while len(recorded_keys) == 0:
@@ -136,10 +142,10 @@ class RLTask(BaseExp):
         """
         trialClock = core.Clock()
         self.trialnum += 1
-        trial['rewarded'] = False
+        trial['rewarded'] = np.nan
         trial['onset']=core.getTime() - self.startTime
-        trial['response'] = -1
-        trial['rt'] = -1
+        trial['response'] = np.nan
+        trial['rt'] = np.nan
         trial['secondary_responses'] = []
         trial['secondary_rts'] = []
         trial['trialnum'] = self.trialnum
@@ -165,12 +171,15 @@ class RLTask(BaseExp):
                 self.correct_tracker += 1
             else:
                 self.correct_tracker = 0
+            if trial['rewarded']:
+                self.presentTextToWindow('+1 point', color=[0,1,0])
+            else:
+                self.presentTextToWindow('+0 points', color=[1,0,0])
+            print('Correct?: %s' % trial['correct'])
         else:
-            print('missed')
-            #miss_sound = sound.Sound(secs=.1,value=700)
-            #miss_sound.play()
-            core.wait(.5)
-                
+            self.presentTextToWindow('Missed Response', color=[1,1,1])
+        core.wait(trial['feedback_duration'])
+        self.clearWindow()    
         # log trial and add to data
         self.writeToLog(json.dumps(trial))
         self.RLdata.append(trial)
@@ -180,8 +189,6 @@ class RLTask(BaseExp):
 
                             
     def run_RLtask(self):
-        # show beeps
-        self.presentInstruction('Press 5 to start')
         # start graph learning
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
@@ -212,20 +219,22 @@ class RLTask(BaseExp):
         
     def run_task(self, pause_trials = None):
         self.setupWindow()
-        self.stim_size = self.getSquareSize(self.win)
-        self.presentInstruction('Welcome! Press 5 to continue...')
-        
+        self.stim_size = self.getSquareSize(self.win)        
         # instructions
         
         self.presentInstruction(
             """
-            This task will help us learn about how you value things.
+            In this task, you will be shown two stimuli at a time
+            from the last task. 
+    
             
-            There are two parts of this task. In the first part
-            you will interact with 11 different stimuli.
+            Each stimuli has a chance of earning 1 point when you select it.
+            The chance of earning a point is different for each stimulus:
+            Some stimuli have a higher chance to earn a point than others.
             
-            In the second phase you will provide a
-            value for the stimuli.
+            Your goal in this task is to get as many points as possible. Each
+            trial is short, so please respond as quickly while trying to
+            pick the more rewarding shape.
             
             Press 5 to continue...
             """)
