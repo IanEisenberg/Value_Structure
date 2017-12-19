@@ -178,7 +178,7 @@ class RLTask(BaseExp):
                                             
                             Press 5 when you are ready to continue
                             """)
-                for i,trial in enumerate(trial_set):
+                for trial in trial_set:
                     self.presentTrial(trial)
                     if self.correct_tracker >= self.correct_thresh:
                         break
@@ -190,11 +190,11 @@ class RLTask(BaseExp):
                         Press 5 when you are ready to continue
                         """)
             # final trials
-            for i,trial in enumerate(trial_set[-1]):
+            for trial in self.all_trials[-1]:
                     self.presentTrial(trial)
         else:
             pause_trials = (len(self.all_trials)/3, len(self.all_trials)/3*2)
-            for i, trial in enumerate(self.all_trials):
+            for trial in self.all_trials:
                 self.presentTrial(trial)
                 if self.trialnum in pause_trials:
                     self.presentInstruction(

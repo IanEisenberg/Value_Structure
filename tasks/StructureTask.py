@@ -20,7 +20,6 @@ from random import sample
 # play a sound at beginning to ensure that psychopy's sound is working
 error_sound = sound.Sound(secs=.1,value=500)
 miss_sound = sound.Sound(secs=.1,value=700)
-error_sound.play();
 
 class StructureTask(BaseExp):
     """ class defining a probabilistic context task
@@ -56,7 +55,6 @@ class StructureTask(BaseExp):
                     duration=None, correct_choice=None):
         if allowed_keys is None:
             allowed_keys = self.action_keys
-        error_sound = sound.Sound(secs=.1,value=500)
         size = self.stim_size
         # present stim
         if rotation==90:
@@ -169,7 +167,7 @@ class StructureTask(BaseExp):
         pause_trials = (len(self.trials)/3, len(self.trials)/3*2)
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
-        for i,trial in enumerate(self.trials):
+        for trial in self.trials:
             self.presentTrial(trial)
             if self.trialnum in pause_trials:
                 self.presentInstruction(
@@ -211,7 +209,7 @@ class StructureTask(BaseExp):
             """
             
         self.presentInstruction(intro_text.replace('[blank]', 
-                                                   'hear the error beep') 
+                                                   'hear the *error beep*') 
                                     % (self.action_keys[0].title(), 
                                        self.action_keys[1].title()))
         
@@ -219,7 +217,7 @@ class StructureTask(BaseExp):
         error_sound.play()
         
         self.presentInstruction(intro_text.replace('[blank]', 
-                                                   'hear the miss beep') 
+                                                   'hear the *miss beep*') 
                                     % (self.action_keys[0].title(), 
                                        self.action_keys[1].title()))
         miss_sound.play(); core.wait(.5)
