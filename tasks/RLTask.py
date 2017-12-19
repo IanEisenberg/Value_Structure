@@ -13,8 +13,7 @@ from BaseExp import BaseExp
 import json
 import numpy as np
 from psychopy import visual, core, event
-from random import sample
-from utils import gen_random_RL_trials, gen_structured_RL_trials
+from utils.utils import gen_random_RL_trials, gen_structured_RL_trials
 
 class RLTask(BaseExp):
     """ class defining a probabilistic context task
@@ -34,9 +33,10 @@ class RLTask(BaseExp):
         self.values = values
         self.stim_files = stim_files
         self.sequence_type = sequence_type
+        self.correct_tracker = 0 # used to determine when to switch stim set
         assert self.sequence_type in ['structured', 'random']
         if self.sequence_type == 'structured':
-            self.correct_tracker = 0 # used to determine when to switch stim set
+            
             self.correct_thresh = 10
             self.all_trials = gen_structured_RL_trials(stim_files, 
                                                        values, 
@@ -193,9 +193,17 @@ class RLTask(BaseExp):
             for i,trial in enumerate(trial_set[-1]):
                     self.presentTrial(trial)
         else:
+            pause_trials = (len(self.all_trials)/3, len(self.all_trials)/3*2)
             for i, trial in enumerate(self.all_trials):
                 self.presentTrial(trial)
-        
+                if self.trialnum in pause_trials:
+                    self.presentInstruction(
+                            """
+                            Take a break!
+                                            
+                            Press 5 when you are ready to continue
+                            """)
+            
     def run_task(self, pause_trials = None):
         self.setupWindow()
         self.stim_size = self.getSquareSize(self.win)        

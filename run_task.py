@@ -2,7 +2,7 @@ import numpy as np
 import os
 from tasks.RLTask import RLTask
 from StructureTask import StructureTask
-from utils import create_value_graph, gen_structure_trials
+from utils.utils import create_value_graph, gen_structure_trials
 
 
 # ************Experiment Setup********************************

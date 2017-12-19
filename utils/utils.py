@@ -70,7 +70,6 @@ def gen_random_RL_trials(stims, values, repeats=3,  duration=2,
                  'correct_choice': int(stim_values[1] > stim_values[0]),
                  'duration': duration,
                  'feedback_duration': feedback_duration,
-                 'stim_set': available_stims,
                  'exp_stage': 'RL_task'}
         trials.append(trial)
 

@@ -44,7 +44,7 @@ class StructureTask(BaseExp):
         
         # set up static variables
         self.action_keys = ['z','m']
-        #np.random.shuffle(self.action_keys)
+        np.random.shuffle(self.action_keys)
         self.n_value_ratings = 3
         self.test_familiarization = True
             
@@ -171,7 +171,7 @@ class StructureTask(BaseExp):
         self.clearWindow()
         for i,trial in enumerate(self.trials):
             self.presentTrial(trial)
-            if i+1 in pause_trials:
+            if self.trialnum in pause_trials:
                 self.presentInstruction(
                         """
                         Take a break!
@@ -188,7 +188,7 @@ class StructureTask(BaseExp):
             
             This experiment has two parts. 
             
-            Each part will around 30 minutes.
+            Each part will last around 30 minutes.
             
             Press 5 to continue...
             """)
@@ -314,7 +314,5 @@ class StructureTask(BaseExp):
             Done with the first task! 
             
             Please wait for the experimenter.
-            
-            Press 5 to continue...
             """)
 
