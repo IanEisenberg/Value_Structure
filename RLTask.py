@@ -27,7 +27,7 @@ class RLTask(BaseExp):
         self.trialnum = 0
         self.pointtracker = 0
         self.correct_tracker = 0 # used to determine when to switch stim set
-        self.correct_thresh = 10
+        self.correct_thresh = 4
         self.startTime = []
         
         # set up argument variables

@@ -106,7 +106,8 @@ def gen_RL_trials(stims, values, duration=2, feedback_duration=1,
     
     
 def gen_structure_trials(graph, stims, trial_count=100, duration=1.5, 
-                         exp_stage=None, balanced=False,  seed=None):
+                         exp_stage=None, balanced=False,  seed=None,
+                         proportion_rotated=.2):
     if seed:
         np.random.seed(seed)
     if not balanced:
@@ -116,7 +117,7 @@ def gen_structure_trials(graph, stims, trial_count=100, duration=1.5,
     stim_counts = pd.value_counts(sequence)
     stim_rotations = {k: [0]*v for k,v in stim_counts.iteritems()}
     for k,v in stim_rotations.items():
-        n_rotations = int(round(len(v)*.2))
+        n_rotations = int(round(len(v)*proportion_rotated))
         v[0:n_rotations] = [90]*n_rotations
         np.random.shuffle(v)
         

@@ -129,13 +129,16 @@ class BaseExp(object):
             core.wait(duration)
         return core.getTime()
         
-    def setupWindow(self):
+    def setupWindow(self, **kwargs):
             """ set up the main window
             """
+            additional_kwargs = {'screen': 1, 
+                                 'monitor': 'testMonitor'}
+            additional_kwargs.update(kwargs)
             self.win = visual.Window(self.window_dims, allowGUI=False, 
-                                     fullscr=self.fullscreen, monitor='testMonitor', 
-                                     units='norm', allowStencil=True,
-                                     color=[-1,-1,-1])   
+                                     fullscr=self.fullscreen, units='norm',
+                                     allowStencil=True, color=[-1,-1,-1], 
+                                     **additional_kwargs)   
     
             self.win.flip()
             self.win.flip()

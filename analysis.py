@@ -111,7 +111,7 @@ for DV in ['rt']:
                      re_formula="~community_cross")
     # larger model
     rs_full = smf.mixedlm("%s ~ community_cross + steps_since_seen \
-                          + correct_shift + C(rotation) + congruent_rot" % DV, 
+                          + correct_shift + C(rotation)" % DV, 
                      data=regress_data, groups=regress_data["subjid"],
                      re_formula="~community_cross")
     DV_name = DV[-7:]

@@ -11,7 +11,7 @@ from utils import create_value_graph, gen_RL_trials, gen_structure_trials
 # subject parameters
 subj = '999' #raw_input('subject id: ')
 save_dir = os.path.join('Data')
-n_structure_trials = 1000
+n_structure_trials = 10
 n_familiarization_trials = 20
 
 
@@ -62,7 +62,7 @@ structure_trials = gen_structure_trials(graph,
                                         n_structure_trials, 
                                         exp_stage='structure_learning')
 
-RL_trials = gen_RL_trials(stims, values, max_repeat=100)
+RL_trials = gen_RL_trials(stims, values, max_repeat=2)
 
 
 # start task

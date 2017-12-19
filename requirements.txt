@@ -1,0 +1,10 @@
+json-tricks>=3.11.0
+numpy>=1.13.3
+pandas>=0.21.0
+PsychoPy>=1.85.3
+scikit-image>=0.13.0
+scipy>=1.0.0
+seaborn>=0.8.1
+sounddevice>=0.3.9
+SoundFile>=0.9.0.post1
+statsmodels>=0.8.0

@@ -41,7 +41,7 @@ class StructureTask(BaseExp):
         self.action_keys = ['left','right']
         np.random.shuffle(self.action_keys)
         self.n_value_ratings = 3
-        self.test_familiarization = False
+        self.test_familiarization = True
             
     #**************************************************************************
     # ******* Display Functions **************
@@ -224,22 +224,16 @@ class StructureTask(BaseExp):
     def run_task(self, pause_trials = None):
         self.setupWindow()
         self.stim_size = self.getSquareSize(self.win)
-        self.presentInstruction('Welcome! Press 5 to continue...')
-        
-        # instructions
-        
         self.presentInstruction(
             """
-            This task will help us learn about how you value things.
+            Welcome! 
             
-            There are two parts of this task. In the first part
-            you will interact with 11 different stimuli.
-            
-            In the second phase you will provide a
-            value for the stimuli.
+            This experiment has two parts. Each part will around 30 minutes.
             
             Press 5 to continue...
             """)
+        
+        # instructions
                 
         self.presentInstruction(
             """
@@ -259,6 +253,7 @@ class StructureTask(BaseExp):
         
         if self.test_familiarization == True:
             learned=False
+            num_misses = 0
             while not learned:
                 self.run_familiarization()
                 self.presentInstruction(
@@ -277,14 +272,16 @@ class StructureTask(BaseExp):
                 if acc>.75:
                     learned=True
                 else:
-                    self.presentInstruction(
-                        """
-                        Seems you could use a refresher! Please look over the
-                        stimuli again and try to remember which way the stimulus
-                        is unrotated
-                        
-                        Press 5 to continue...
-                        """)
+                    num_misses += 1
+                    if num_misses == 3:
+                        self.presentInstruction(
+                            """
+                            Seems you could use a refresher! Please look over the
+                            stimuli again and try to remember which way the stimulus
+                            is unrotated
+                            
+                            Press 5 to continue...
+                            """)
         else:
             self.run_familiarization()
                 
