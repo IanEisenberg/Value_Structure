@@ -17,14 +17,19 @@ prefs.general['audioLib'] = ['sounddevice']
 from psychopy import visual, core, event, sound
 from random import sample
 
+# play a sound at beginning to ensure that psychopy's sound is working
+error_sound = sound.Sound(secs=.1,value=500)
+miss_sound = sound.Sound(secs=.1,value=700)
+error_sound.play();
+
 class StructureTask(BaseExp):
     """ class defining a probabilistic context task
     """
     
-    def __init__(self,subjid, save_dir, stim_files, graph, 
+    def __init__(self, expid, subjid, save_dir, stim_files, graph, 
                  trials, familiarization_trials, 
                  fullscreen = False):
-        super(StructureTask, self).__init__(subjid, save_dir, fullscreen)
+        super(StructureTask, self).__init__(expid, subjid, save_dir, fullscreen)
         # set up "holder" variables
         self.structuredata = []  
         self.pointtracker = 0
@@ -38,60 +43,19 @@ class StructureTask(BaseExp):
         self.trials = trials
         
         # set up static variables
-        self.action_keys = ['left','right']
-        np.random.shuffle(self.action_keys)
+        self.action_keys = ['z','m']
+        #np.random.shuffle(self.action_keys)
         self.n_value_ratings = 3
         self.test_familiarization = True
             
     #**************************************************************************
     # ******* Display Functions **************
     #**************************************************************************
-    
-    def get_labeled_banner(self, labeled_stims, positions, 
-                           height, display_value=True):
-        banner = []
-        labeled_stims = sample(labeled_stims, len(labeled_stims))
-        for i, labeled_stim in enumerate(labeled_stims):
-            stim_file, value = labeled_stim
-            # stimulus
-            stim = visual.ImageStim(self.win, image=stim_file,
-                                units='norm', 
-                                pos=(positions[i],height),
-                                size=self.stim_size*.6)
-            banner.append(stim)
-            if display_value:
-                # value
-                valuestim = visual.TextStim(self.win, '%s RMB' % value, 
-                                           pos=(positions[i],height-.3), 
-                                           units='norm')
-                banner.append(valuestim)
-        return banner
 
-    def place_labeled_stims(self, labeled_stims, scale):        
-        # figure out position of shapes
-        pos_limits = np.array([-.3,.3])*scale.stretch
-        limits = [scale.low, scale.high]
-        banner = []
-        positions=[]
-        for i, labeled_stim in enumerate(labeled_stims):
-            overlap=0
-            stim_file, value = labeled_stim
-            # stimulus
-            stim_pos = float(value-limits[0])/(limits[1]-limits[0])
-            stim_pos = stim_pos*pos_limits[1]+(1-stim_pos)*pos_limits[0]
-            if np.any([abs(i-stim_pos)<.1 for i in positions]):
-                overlap = .18
-            stim = visual.ImageStim(self.win, image=stim_file,
-                                units='norm', 
-                                pos=(stim_pos,
-                                     scale.pos[1]+.17+overlap),
-                                size=self.stim_size*.4)
-            banner.append(stim)
-            positions.append(stim_pos)
-        return banner
-        
-    def presentStim(self, stim_file, rotation, textstim=None, duration=None,
-                    correct_choice=None):
+    def presentStim(self, stim_file, rotation, allowed_keys=None, textstim=None, 
+                    duration=None, correct_choice=None):
+        if allowed_keys is None:
+            allowed_keys = self.action_keys
         error_sound = sound.Sound(secs=.1,value=500)
         size = self.stim_size
         # present stim
@@ -111,7 +75,7 @@ class StructureTask(BaseExp):
         stim_clock = core.Clock()
         if duration:
             while stim_clock.getTime() < duration:
-                keys = event.getKeys(self.action_keys + [self.quit_key],
+                keys = event.getKeys(allowed_keys + [self.quit_key],
                                      timeStamped=stim_clock)
                 for key,response_time in keys:
                     self.checkRespForQuitKey(key)
@@ -121,7 +85,7 @@ class StructureTask(BaseExp):
                     recorded_keys+=keys
         else:
             while len(recorded_keys) == 0:
-                keys = event.getKeys(self.action_keys + [self.quit_key],
+                keys = event.getKeys(allowed_keys+ [self.quit_key],
                                      timeStamped=stim_clock)
                 for key,response_time in keys:
                     self.checkRespForQuitKey(key)
@@ -169,7 +133,6 @@ class StructureTask(BaseExp):
                 # record points for bonus
                 self.pointtracker += 1
         else:
-            miss_sound = sound.Sound(secs=.1,value=700)
             miss_sound.play()
             core.wait(.5)
                 
@@ -182,11 +145,9 @@ class StructureTask(BaseExp):
     def run_familiarization(self):
         i=0
         stims = sample(self.stim_files, len(self.stim_files))
-        while i<len(stims)*2:
-            filey = stims[i//2]
-            text = ['Unrotated','Rotated'][i%2==1]
-            textstim = visual.TextStim(self.win, text, pos=[0,.5], units='norm')
-            keys = self.presentStim(filey, [0,90][i%2==1], textstim)
+        while i<len(stims):
+            filey = stims[i]
+            keys = self.presentStim(filey, 0, ['left','right'])
             if keys[0][0] == 'right':
                 i+=1
             elif i>0:
@@ -194,26 +155,23 @@ class StructureTask(BaseExp):
                 
     def run_familiarization_test(self):
         np.random.shuffle(self.familiarization_trials)
-        for trial in self.familiarization_trials:
-            trial['rotation'] = np.random.choice([0,90])
+        # ensure some rotation
+        N = len(self.familiarization_trials)
+        rotation = np.zeros(N)
+        rotation[:int(N*.2)] = 90
+        np.random.shuffle(rotation)
+        for i, trial in enumerate(self.familiarization_trials):
+            trial['rotation'] = rotation[i]
             self.presentTrial(trial)
                             
     def run_graph_learning(self):
-        # show beeps
-        self.presentInstruction('Press 5 to hear the error beep')
-        error_sound = sound.Sound(secs=.1,value=500)
-        error_sound.play(); core.wait(.5)
-        self.presentInstruction('Press 5 to hear the "miss" beep')
-        error_sound = sound.Sound(secs=.1,value=700)
-        error_sound.play(); core.wait(.5)
-        self.presentInstruction('Press 5 to start')
         # start graph learning
         pause_trials = (len(self.trials)/3, len(self.trials)/3*2)
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
         for i,trial in enumerate(self.trials):
             self.presentTrial(trial)
-            if i in pause_trials:
+            if i+1 in pause_trials:
                 self.presentInstruction(
                         """
                         Take a break!
@@ -228,84 +186,118 @@ class StructureTask(BaseExp):
             """
             Welcome! 
             
-            This experiment has two parts. Each part will around 30 minutes.
+            This experiment has two parts. 
+            
+            Each part will around 30 minutes.
             
             Press 5 to continue...
             """)
         
         # instructions
-                
-        self.presentInstruction(
-            """
-            In the first part of this study, stimuli
-            will be shown one at a time for a short 
-            amount of time.
+        intro_text = """
+            In the first part of this study, abstract images
+            will be shown one at a time for a short amount of time.
             
-            Your task is to indicated whether 
+            Your task is to indicate whether 
             each stimulus is rotated or unrotated.
             
+            %s key: Unrotated
+            %s key: Rotated
+            
+            You will hear a beep if you choose incorrectly 
+            or miss a response.
+            
+            Press 5 to [blank]
+            """
+            
+        self.presentInstruction(intro_text.replace('[blank]', 
+                                                   'hear the error beep') 
+                                    % (self.action_keys[0].title(), 
+                                       self.action_keys[1].title()))
+        
+        # show beeps
+        error_sound.play()
+        
+        self.presentInstruction(intro_text.replace('[blank]', 
+                                                   'hear the miss beep') 
+                                    % (self.action_keys[0].title(), 
+                                       self.action_keys[1].title()))
+        miss_sound.play(); core.wait(.5)
+        
+        self.presentInstruction(
+            """
             We will start by familiarizing you with the 
-            stimuli. Press the left and right keys to 
-            move through the stimuli.
+            images. Each of these images is unrotated.
+            
+            Press the left and right keys to move through the images.
             
             Press 5 to continue...
             """)
+        self.run_familiarization()
+        
         
         if self.test_familiarization == True:
             learned=False
             num_misses = 0
-            while not learned:
-                self.run_familiarization()
-                self.presentInstruction(
-                    """
-                    We will now practice responding to the stimuli. 
-                    Indicate whether the stimulus is unrotated or rotated.
-                    
-                            %s key: Unrotated
-                            %s key: Rotated
-                            
-                    Press 5 to continue...
-                    """ % (self.action_keys[0], self.action_keys[1]))
+            self.presentInstruction(
+                """
+                We will now practice responding to the images. 
+                Indicate whether the stimulus is unrotated or rotated.
+                
+                        %s key: Unrotated
+                        %s key: Rotated
+                        
+                Press 5 to continue...
+                """ % (self.action_keys[0].title(), 
+                       self.action_keys[1].title()))
+            while not learned:     
                 self.run_familiarization_test()
                 acc = np.mean([t['correct'] for t in self.structuredata 
                                if t['exp_stage'] == 'familiarization_test'])
-                if acc>.75:
+                if acc>.9:
                     learned=True
                 else:
                     num_misses += 1
-                    if num_misses == 3:
+                    if num_misses%3==0:
                         self.presentInstruction(
                             """
                             Seems you could use a refresher! Please look over the
-                            stimuli again and try to remember which way the stimulus
+                            images again and try to remember which way the stimulus
                             is unrotated
+                            
+                            Press left and right keys to move through the images
                             
                             Press 5 to continue...
                             """)
-        else:
-            self.run_familiarization()
+                        self.run_familiarization()
+                        self.presentInstruction(
+                            """
+                            We will now practice responding to the images again.
+                            
+                                %s key: Unrotated
+                                %s key: Rotated
+                                
+                            Press 5 to continue...
+                            """ % (self.action_keys[0].title(), 
+                                   self.action_keys[1].title()))
                 
         # structure learning 
         self.presentInstruction(
             """
             Finished with familiarization. In the next section, 
-            indicated whether the stimulus is unrotated or rotated.
+            indicate whether the image is unrotated or rotated.
             
                 %s key: Unrotated
                 %s key: Rotated
             
-            Each stimulus will only come up on the screen for a short 
+            Each image will only come up on the screen for a short 
             amount of time. Please respond as quickly and accurately 
             as possible.
             
-            You will hear a beep if you choose incorrectly or miss
-            a response.
+            There will be two breaks.
             
-            This section takes a long time, so there will be two
-            breaks.
-            
-            Press 5 to continue...
-            """ % (self.action_keys[0], self.action_keys[1]))
+            Press 5 to start.
+            """ % (self.action_keys[0].title(), self.action_keys[1].title()))
         
         self.run_graph_learning()
         
@@ -316,4 +308,13 @@ class StructureTask(BaseExp):
                 } 
         otherdata = {'structuredata': self.structuredata}
         self.writeData(taskdata, otherdata)
+        
+        self.presentInstruction(
+            """
+            Done with the first task! 
+            
+            Please wait for the experimenter.
+            
+            Press 5 to continue...
+            """)
 

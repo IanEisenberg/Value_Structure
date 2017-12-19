@@ -12,7 +12,8 @@ class BaseExp(object):
     """ class defining a probabilistic context task
     """
     
-    def __init__(self,subjid, save_dir, fullscreen = False):
+    def __init__(self, expid, subjid, save_dir, fullscreen = False):
+        self.expid = expid
         self.subjid=subjid
         self.save_dir = save_dir  
         self.fullscreen = fullscreen
@@ -28,8 +29,8 @@ class BaseExp(object):
         self.window_dims=[1920,1080]
         
         # set up recording files
-        self.logfilename='%s_%s.log'%(self.subjid,self.timestamp)
-        self.datafilename='%s_%s.pkl'%(self.subjid,self.timestamp)
+        self.logfilename='%s_%s_%s.log'%(self.subjid,self.expid,self.timestamp)
+        self.datafilename='%s_%s_%s.pkl'%(self.subjid,self.expid,self.timestamp)
         # log initial state
         try:
             self.writeToLog(self.toJSON())

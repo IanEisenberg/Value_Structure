@@ -51,8 +51,35 @@ def gen_balanced_sequence(graph, repetitions):
     np.random.shuffle(sequence)
     return sequence
 
-def gen_RL_trials(stims, values, duration=2, feedback_duration=1,
-                  max_repeat=2, seed=None):
+def gen_random_RL_trials(stims, values, repeats=3,  duration=2, 
+                         feedback_duration=1, seed=None):
+    if seed:
+        np.random.seed(seed)
+    available_stims = values.keys()
+    # get trials per condition
+    trials = []
+    permutes = list(permutations(available_stims,2)) * repeats
+    np.random.shuffle(permutes)
+    for stim1, stim2 in permutes:
+        stim_values =  [values[stim1], values[stim2]]
+        rewards = [int(r.random() < v) for v in stim_values]
+        trial = {'stim_indices': [stim1, stim2],
+                 'stim_files': [stims[stim1], stims[stim2]],
+                 'rewards': rewards,
+                 'values': stim_values,
+                 'correct_choice': int(stim_values[1] > stim_values[0]),
+                 'duration': duration,
+                 'feedback_duration': feedback_duration,
+                 'stim_set': available_stims,
+                 'exp_stage': 'RL_task'}
+        trials.append(trial)
+
+    np.random.seed()
+    return trials
+    
+    
+def gen_structured_RL_trials(stims, values, max_repeats=50, duration=2, 
+                             feedback_duration=1, seed=None):
     if seed:
         np.random.seed(seed)
     stim_rollout = [[1,13], # 1> 13
@@ -80,7 +107,8 @@ def gen_RL_trials(stims, values, duration=2, feedback_duration=1,
                      'correct_choice': int(stim_values[1] > stim_values[0]),
                      'duration': duration,
                      'feedback_duration': feedback_duration,
-                     'stim_set': available_stims}
+                     'stim_set': available_stims,
+                     'exp_stage': 'RL_task'}
             trials.append(trial)
         all_trials.append(trials)
     # add final section with all stims
@@ -113,7 +141,7 @@ def gen_structure_trials(graph, stims, trial_count=100, duration=1.5,
     if not balanced:
         sequence = gen_sequence(graph, trial_count)
     else:
-        sequence = gen_balanced_sequence(graph, 2)
+        sequence = gen_balanced_sequence(graph, trial_count//len(graph.keys()))
     stim_counts = pd.value_counts(sequence)
     stim_rotations = {k: [0]*v for k,v in stim_counts.iteritems()}
     for k,v in stim_rotations.items():

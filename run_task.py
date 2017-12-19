@@ -1,18 +1,16 @@
-import cPickle
 import numpy as np
 import os
-from BdmProcedure import BdmProcedure
-from RLTask import RLTask
+from tasks.RLTask import RLTask
 from StructureTask import StructureTask
-from utils import create_value_graph, gen_RL_trials, gen_structure_trials
+from utils import create_value_graph, gen_structure_trials
 
 
 # ************Experiment Setup********************************
 # subject parameters
 subj = '999' #raw_input('subject id: ')
 save_dir = os.path.join('Data')
-n_structure_trials = 10
-n_familiarization_trials = 20
+n_structure_trials = 9
+n_familiarization_trials = 15
 
 
 
@@ -60,31 +58,34 @@ familiarization_trials = gen_structure_trials(graph,
 structure_trials = gen_structure_trials(graph, 
                                         stims, 
                                         n_structure_trials, 
-                                        exp_stage='structure_learning')
+                                        exp_stage='structure_learning',
+                                        proportion_rotated=.2)
 
-RL_trials = gen_RL_trials(stims, values, max_repeat=2)
+
 
 
 # start task
 # use seeds [0,1,10,11] for 15 node graph
-structure = StructureTask(subjid=subj, 
-                      save_dir=save_dir, 
-                      stim_files=stims, 
-                      graph=graph, 
-                      trials=structure_trials, 
-                      familiarization_trials=familiarization_trials, 
-                      fullscreen=False)
+structure = StructureTask(expid='structure',
+                          subjid=subj, 
+                          save_dir=save_dir, 
+                          stim_files=stims, 
+                          graph=graph, 
+                          trials=structure_trials, 
+                          familiarization_trials=familiarization_trials, 
+                          fullscreen=False)
 
                       
 
 structure.run_task()
 
 
-RLtask = RLTask(subjid=subj,
+RLtask = RLTask(expid='RL',
+                subjid=subj,
                 save_dir=save_dir,
                 stim_files=stims,
-                graph=graph,
-                trials=RL_trials,
+                values=values,
+                sequence_type='random',
                 fullscreen=False)
 
 points = RLtask.run_task()
