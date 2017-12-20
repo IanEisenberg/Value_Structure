@@ -102,10 +102,10 @@ class StructureTask(BaseExp):
         """
         trialClock = core.Clock()
         self.trialnum += 1
-        trial['correct'] = False
+        trial['correct'] = np.nan
         trial['onset']=core.getTime() - self.startTime
-        trial['response'] = -1
-        trial['rt'] = -1
+        trial['response'] = np.nan
+        trial['rt'] = np.nan
         trial['secondary_responses'] = []
         trial['secondary_rts'] = []
         trial['trialnum'] = self.trialnum

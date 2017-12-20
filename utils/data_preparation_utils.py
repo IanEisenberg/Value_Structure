@@ -12,15 +12,31 @@ def load_data(subj):
     #unpickle
     RL_unpickled = pickle.load(open(RL_file,'rb'))
     structure_unpickled = pickle.load(open(structure_file,'rb'))
+    # combine metadata
+    metadata = {'RL': RL_unpickled['taskdata'],
+                'structure': structure_unpickled['taskdata']}
     #convert to dataframes
     RL_df = pd.DataFrame(RL_unpickled['RLdata'])
     structure_df = pd.DataFrame(structure_unpickled['structuredata'])
+    # get descriptive stats
+    descriptive_stats = get_descriptive_stats(RL_df, structure_df)
     # modify dataframes
     RL_df = post_process_RL(RL_df)
     structure_df = post_process_structure(structure_df)
-    return RL_df, structure_df
+    return RL_df, structure_df, metadata, descriptive_stats
+
+def get_descriptive_stats(RL_df, structure_df):
+    stats = {}
+    for name, df in [('RL', RL_df), ('structure', structure_df)]:
+        stats[name] = {}
+        stats[name]['missed_percent'] = np.mean(df.rt.isnull())
+        stats[name]['avg_rt'] = df.rt.median()
+        stats[name]['accuracy'] = df.correct.mean()
+    return stats
     
 def post_process_RL(RL_df):
+    # scrub data
+    RL_df = RL_df[~RL_df.rt.isnull()]
     # add new columns
     stim_choices = RL_df.apply(lambda x: x.stim_indices[int(x.response)] \
                                          if not pd.isnull(x.response) else np.nan, axis=1)
@@ -34,6 +50,7 @@ def post_process_RL(RL_df):
     remapping = {k: str(v) for v,k in enumerate(RL_df.stim_set.unique())}
     for k,v in remapping.items():
         RL_df.stim_set.replace(k, v, inplace=True)
+    RL_df.stim_set = RL_df.stim_set.astype(int)
     # drop unneeded
     RL_df.drop(['duration', 'feedback_duration', 
                 'secondary_responses', 'secondary_rts'],
@@ -43,6 +60,8 @@ def post_process_RL(RL_df):
     return RL_df
 
 def post_process_structure(structure_df):
+    # scrub data
+    structure_df = structure_df[~structure_df.rt.isnull()]
     structure_df = structure_df.query('exp_stage == "structure_learning"')
     # add new columns
     # add community column
@@ -50,6 +69,9 @@ def post_process_structure(structure_df):
     structure_df.insert(0, 'community', community)
     structure_df.insert(0, 'community_transition',
                         structure_df.community.diff()!=0)
+    # add transition columns
+    transition_node = structure_df.stim_index.apply(lambda x: x in [0,4,5,9,10,14])
+    structure_df.insert(0, 'transition_node', transition_node)
     # trials since last seen
     steps_since_seen = []
     last_seen = {}
@@ -71,10 +93,11 @@ def post_process_structure(structure_df):
     return structure_df
 
 def process_data(subj):
-    RL_df, structure_df = load_data(subj)
+    RL_df, structure_df, metadata, descriptive_stats = load_data(subj)
     data = {'RL': RL_df,
             'structure': structure_df,
-            'meta': {}}
+            'meta': metadata,
+            'descriptive_stats': descriptive_stats}
     pickle.dump(data, open(path.join(d,'../Data/ProcessedData', 
                                      '%s_processed_data.pkl' % subj),'wb'))
     return data
