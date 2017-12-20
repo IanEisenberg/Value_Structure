@@ -13,7 +13,8 @@ from BaseExp import BaseExp
 import json
 import numpy as np
 from psychopy import visual, core, event
-from utils.utils import gen_random_RL_trials, gen_structured_RL_trials
+from utils.utils import (gen_random_RL_trials, gen_semistructured_RL_trials,
+                        gen_structured_RL_trials)
 
 class RLTask(BaseExp):
     """ class defining a probabilistic context task
@@ -34,7 +35,7 @@ class RLTask(BaseExp):
         self.stim_files = stim_files
         self.sequence_type = sequence_type
         self.correct_tracker = 0 # used to determine when to switch stim set
-        assert self.sequence_type in ['structured', 'random']
+        assert self.sequence_type in ['structured', 'random', 'semistructured']
         if self.sequence_type == 'structured':
             
             self.correct_thresh = 10
@@ -45,9 +46,11 @@ class RLTask(BaseExp):
             self.all_trials = gen_random_RL_trials(stim_files, 
                                                    values, 
                                                    **trial_kwargs)
+        elif self.sequence_type == 'semistructured':
+            self.all_trials = gen_semistructured_RL_trials(stim_files, 
+                                                           values, 
+                                                           **trial_kwargs)
             
-            self.all_trials = self.all_trials[0:20]
-        
         # set up static variables
         self.action_keys = ['left','right']
             
@@ -94,7 +97,7 @@ class RLTask(BaseExp):
                                                  size=self.stim_size,
                                                  lineWidth=10,
                                                  pos=positions[choice],
-                                                 edges=64)
+                                                 edges=96)
                         self.draw_stim(stim_files, 
                                        other_stim=choice_box)
                     recorded_keys+=keys
@@ -151,7 +154,7 @@ class RLTask(BaseExp):
                 self.presentTextToWindow('+0 points', color=[1,0,0])
             print('Correct?: %s' % trial['correct'])
         else:
-            self.presentTextToWindow('Missed Response', color=[1,1,1])
+            self.presentTextToWindow('Please Respond Faster', color=[1,1,1])
         core.wait(trial['feedback_duration'])
         self.clearWindow()    
         # log trial and add to data
@@ -163,6 +166,7 @@ class RLTask(BaseExp):
 
                             
     def run_RLtask(self):
+        self.startTime = core.getTime()
         # start graph learning
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
@@ -176,7 +180,7 @@ class RLTask(BaseExp):
                             """
                             Take a break!
                                             
-                            Press 5 when you are ready to continue
+                    Press 5 when you are ready to continue
                             """)
                 for trial in trial_set:
                     self.presentTrial(trial)
@@ -187,7 +191,7 @@ class RLTask(BaseExp):
                         """
                         Take a break!
                                         
-                        Press 5 when you are ready to continue
+                Press 5 when you are ready to continue
                         """)
             # final trials
             for trial in self.all_trials[-1]:
@@ -201,7 +205,7 @@ class RLTask(BaseExp):
                             """
                             Take a break!
                                             
-                            Press 5 when you are ready to continue
+                    Press 5 when you are ready to continue
                             """)
             
     def run_task(self, pause_trials = None):
@@ -228,7 +232,7 @@ class RLTask(BaseExp):
 
         self.presentInstruction(
             """
-            You select each image by pressing the correponding arrow key.
+            You select an image by pressing the correponding arrow key.
             
             Each image has a chance of earning 1 point when you select it.
             The chance of earning a point is different for each image:

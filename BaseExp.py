@@ -99,7 +99,7 @@ class BaseExp(object):
                 
     def presentInstruction(self, text, size=.07):
             self.presentTextToWindow(text, size = size)
-            resp,self.startTime=self.waitForKeypress(self.trigger_key)
+            resp,time=self.waitForKeypress(self.trigger_key)
             self.checkRespForQuitKey(resp)
             event.clearEvents()
     

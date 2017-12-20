@@ -163,6 +163,7 @@ class StructureTask(BaseExp):
             self.presentTrial(trial)
                             
     def run_graph_learning(self):
+        self.trialnum = 0
         # start graph learning
         pause_trials = (len(self.trials)/3, len(self.trials)/3*2)
         self.presentTextToWindow('Get Ready!', duration=2)
@@ -180,6 +181,7 @@ class StructureTask(BaseExp):
     def run_task(self, pause_trials = None):
         self.setupWindow()
         self.stim_size = self.getSquareSize(self.win)
+        self.startTime = core.getTime()
         self.presentInstruction(
             """
             Welcome! 
@@ -208,8 +210,8 @@ class StructureTask(BaseExp):
             Press 5 to [blank]
             """
             
-        self.presentInstruction(intro_text.replace('[blank]', 
-                                                   'hear the *error beep*') 
+        self.presentInstruction(intro_text.replace('[blank]',
+                                                   'hear the error beep') 
                                     % (self.action_keys[0].title(), 
                                        self.action_keys[1].title()))
         
@@ -217,7 +219,7 @@ class StructureTask(BaseExp):
         error_sound.play()
         
         self.presentInstruction(intro_text.replace('[blank]', 
-                                                   'hear the *miss beep*') 
+                                                   'hear the miss beep') 
                                     % (self.action_keys[0].title(), 
                                        self.action_keys[1].title()))
         miss_sound.play(); core.wait(.5)

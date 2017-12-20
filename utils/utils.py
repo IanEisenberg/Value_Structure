@@ -1,10 +1,12 @@
 from itertools import permutations
+from math import ceil
 import numpy as np
 import pandas as pd
 import random as r
 
 # **********HELPER FUNCTIONS ***********************************
-def create_value_graph(graph, seeds, weight = .95, steps = 1000):
+def create_value_graph(graph, seeds, weight = .95, steps = 1000,
+                       scaling=1, offset=0):
     value_graph = {key:.5 for key in graph.keys()}
     value_graph.update(seeds)
     node = np.random.choice(value_graph.keys())
@@ -13,13 +15,18 @@ def create_value_graph(graph, seeds, weight = .95, steps = 1000):
         avg_val = np.mean([value_graph[i] for i in connections])
         value_graph[node] = value_graph[node]*weight + avg_val*(1-weight)
         node = np.random.choice(graph[node])
-    # scale
+    # scale 
     min_value = np.min(value_graph.values())
     for k in value_graph.keys():
         value_graph[k]-=min_value
     max_value = np.max(value_graph.values())
     for k in value_graph.keys():
         value_graph[k]/=max_value
+    value_graph = {k:v*scaling+offset for k,v in value_graph.items()}
+
+    # round
+    for k,v in value_graph.items():
+        value_graph[k] = ceil(v*1000.0)/1000.0
     return value_graph
 
 def extract_rt_relationships(structuredata):
@@ -76,7 +83,36 @@ def gen_random_RL_trials(stims, values, repeats=3,  duration=2,
     np.random.seed()
     return trials
     
+def gen_semistructured_RL_trials(stims, values, repeats=6,  duration=2, 
+                                 feedback_duration=1, seed=None):
+    if seed:
+        np.random.seed(seed)
+    first_set = [1,2,6,7,11,12]
+    stim_rollout = [first_set, list(set(values.keys())-set(first_set))]
     
+    trials = []
+    for available_stims in stim_rollout:
+        # get trials per condition
+        permutes = list(permutations(available_stims,2)) * repeats
+        np.random.shuffle(permutes)
+        for stim1, stim2 in permutes:
+            stim_values =  [values[stim1], values[stim2]]
+            rewards = [int(r.random() < v) for v in stim_values]
+            trial = {'stim_indices': [stim1, stim2],
+                     'stim_files': [stims[stim1], stims[stim2]],
+                     'rewards': rewards,
+                     'values': stim_values,
+                     'correct_choice': int(stim_values[1] > stim_values[0]),
+                     'duration': duration,
+                     'feedback_duration': feedback_duration,
+                     'stim_set': available_stims,
+                     'exp_stage': 'RL_task'}
+            trials.append(trial)
+    np.random.seed()
+    return trials
+    
+
+  
 def gen_structured_RL_trials(stims, values, max_repeats=50, duration=2, 
                              feedback_duration=1, seed=None):
     if seed:
@@ -94,7 +130,7 @@ def gen_structured_RL_trials(stims, values, max_repeats=50, duration=2,
         # get trials per condition
         trials = []
         available_stims = stim_rollout.pop(0)
-        permutes = list(permutations(available_stims,2)) * max_repeat
+        permutes = list(permutations(available_stims,2)) * max_repeats
         np.random.shuffle(permutes)
         for stim1, stim2 in permutes:
             stim_values =  [values[stim1], values[stim2]]
