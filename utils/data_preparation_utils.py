@@ -1,10 +1,13 @@
 from glob import glob
+import numpy as np
 from os import path
 import pandas as pd
 import pickle
+# get path of file
+d = path.dirname(__file__)
 
 def load_data(subj):
-    RL_file, structure_file = glob(path.join('../Data/RawData','*%s*' % subj))
+    RL_file, structure_file = glob(path.join(d, '../Data/RawData','*%s*' % subj))
     assert 'RL' in RL_file
     #unpickle
     RL_unpickled = pickle.load(open(RL_file,'rb'))
@@ -19,8 +22,18 @@ def load_data(subj):
     
 def post_process_RL(RL_df):
     # add new columns
-    stim_choices = RL_df.apply(lambda x: x['stim_indices'][x['response']], axis=1)
+    stim_choices = RL_df.apply(lambda x: x.stim_indices[int(x.response)] \
+                                         if not pd.isnull(x.response) else np.nan, axis=1)
+    value_choices = RL_df.apply(lambda x: x['values'][int(x.response)] \
+                                         if not pd.isnull(x.response) else np.nan, axis=1)
+    
     RL_df.insert(0, 'selected_stim', stim_choices)
+    RL_df.insert(0, 'selected_value', value_choices)
+    # convert stim set to categorical label
+    RL_df.stim_set = RL_df.stim_set.astype(str)
+    remapping = {k: str(v) for v,k in enumerate(RL_df.stim_set.unique())}
+    for k,v in remapping.items():
+        RL_df.stim_set.replace(k, v, inplace=True)
     # drop unneeded
     RL_df.drop(['duration', 'feedback_duration', 
                 'secondary_responses', 'secondary_rts'],
@@ -36,7 +49,20 @@ def post_process_structure(structure_df):
     community = structure_df.stim_index.apply(get_community)
     structure_df.insert(0, 'community', community)
     structure_df.insert(0, 'community_transition',
-                        structure_df.community.diff())
+                        structure_df.community.diff()!=0)
+    # trials since last seen
+    steps_since_seen = []
+    last_seen = {}
+    # ...for value data
+    for i, stim in enumerate(structure_df.stim_index):
+        if stim in last_seen.keys():
+            steps_since = i-last_seen[stim]
+        else:
+            steps_since = 0
+        last_seen[stim] = i
+        steps_since_seen.append(steps_since)
+    structure_df.loc[:,'steps_since_seen'] = steps_since_seen 
+        
     # drop unneeded
     structure_df.drop(['duration', 'secondary_responses', 'secondary_rts'],
                 axis=1,
@@ -49,10 +75,12 @@ def process_data(subj):
     data = {'RL': RL_df,
             'structure': structure_df,
             'meta': {}}
-    pickle.dump(data, open(path.join('../Data/ProcessedData', 
+    pickle.dump(data, open(path.join(d,'../Data/ProcessedData', 
                                      '%s_processed_data.pkl' % subj),'wb'))
+    return data
     
 # helper functions
 def get_community(index):
     communities = [[0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14]]
     return [i for i, comm in enumerate(communities) if index in comm][0]
+            

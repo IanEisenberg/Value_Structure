@@ -7,7 +7,7 @@ from utils.utils import create_value_graph, gen_structure_trials
 
 # ************Experiment Setup********************************
 # subject parameters
-subj = '999' #raw_input('subject id: ')
+subj = 'test' #raw_input('subject id: ')
 save_dir = os.path.join('Data')
 n_structure_trials = 1400
 n_familiarization_trials = 30
@@ -71,19 +71,17 @@ structure = StructureTask(expid='structure',
                           graph=graph, 
                           trials=structure_trials, 
                           familiarization_trials=familiarization_trials, 
-                          fullscreen=False)
+                          fullscreen=True)
 
-                      
-
-structure.run_task()
-
-
+                     
 RLtask = RLTask(expid='RL',
                 subjid=subj,
                 save_dir=save_dir,
                 stim_files=stims,
                 values=values,
                 sequence_type='semistructured',
-                fullscreen=False)
+                repeats=6,
+                fullscreen=True)
 
+structure.run_task()
 points = RLtask.run_task()

@@ -203,7 +203,7 @@ class RLTask(BaseExp):
                 if self.trialnum in pause_trials:
                     self.presentInstruction(
                             """
-                            Take a break!
+                    Take a break!
                                             
                     Press 5 when you are ready to continue
                             """)
@@ -215,8 +215,8 @@ class RLTask(BaseExp):
         # introduction
         text =  \
             """
-    In this task, two images from the last task will 
-    be shown on the screen at once, as shown.\n\n\n\n\n\n\n\n\n\n\n
+  In this task, two images from the last task will 
+  be shown on the screen at once, as shown.\n\n\n\n\n\n\n\n\n\n\n
                   Press 5 to continue...
             """
         intro_stim=visual.TextStim(self.win, 
@@ -232,14 +232,14 @@ class RLTask(BaseExp):
 
         self.presentInstruction(
             """
-            You select an image by pressing the correponding arrow key.
+            You select one image by pressing the correponding arrow key.
             
             Each image has a chance of earning 1 point when you select it.
             The chance of earning a point is different for each image:
             some images have a higher chance to earn a point than others.
             
             Your goal in this task is to get as many points as possible. Each
-            trial is short, so please respond5 quickly while trying to
+            trial is short, so please respond quickly while trying to
             pick the more rewarding shape.
             
             Press 5 to start...
