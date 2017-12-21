@@ -7,7 +7,7 @@ import pickle
 d = path.dirname(__file__)
 
 def load_data(subj):
-    RL_file, structure_file = glob(path.join(d, '../Data/RawData','*%s*' % subj))
+    RL_file, structure_file = sorted(glob(path.join(d, '../Data/RawData','*%s*' % subj)))
     assert 'RL' in RL_file
     #unpickle
     RL_unpickled = pickle.load(open(RL_file,'rb'))

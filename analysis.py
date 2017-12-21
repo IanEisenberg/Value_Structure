@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from models import BasicRLModel, GraphRLModel, SR_RLModel
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -38,10 +39,6 @@ sns.pointplot(x='stim_index', y='correct', data=structure,   join=False,
 plt.figure(figsize=(12,8))
 RL.rt.hist(bins=50)
 
-
-from models import BasicRLModel, GraphRLModel, SR_RLModel
-
-
 basic_m = BasicRLModel(RL)
 graph_m = GraphRLModel(RL, meta['structure']['graph'])
 SR_m = SR_RLModel(RL, structure)
@@ -52,3 +49,13 @@ for model in [basic_m, graph_m, SR_m]:
 compare_df = RL.loc[:,['response','stim_indices', 'selected_stim']]
 ignored = compare_df.apply(lambda x: x.stim_indices[int(1-x.response)] \
                                     if not pd.isnull(x.response) else np.nan, axis=1)
+
+
+# drive M from one step transition probabilities
+from utils.graph_utils import graph_to_matrix
+from models import SR_from_transition
+graph = meta['structure']['graph']
+onestep = graph_to_matrix(graph)/4.0
+TrueM = SR_from_transition(onestep, SR_m.gamma)
+M = SR_m.get_M()
+np.corrcoef(M.flatten(),TrueM.flatten())

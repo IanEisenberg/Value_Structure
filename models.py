@@ -156,8 +156,13 @@ def SR_TD(data, alpha, gamma):
     for i, trial in state_df.iterrows():
         update(trial.s, trial.sprime)
     return M
-    
-    
+
+def SR_from_transition(transitions, gamma):
+    """ Computes successor representation from one-step transition matrix """
+    I = np.identity(transitions.shape[1])
+    M=np.linalg.inv(I-gamma*transitions)
+    return M
+
 class SR_RLModel(BasicRLModel):
     """ SR-RL Model 
     

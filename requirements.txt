@@ -1,5 +1,6 @@
 cffi
 json-tricks>=3.11.0
+lmfit
 numpy>=1.13.3
 pandas>=0.21.0
 PsychoPy>=1.85.3

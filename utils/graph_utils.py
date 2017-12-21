@@ -6,7 +6,10 @@ def graph_from_dict(graph_dict, values=None):
     g = igraph.Graph()
     g.add_vertices(list(set(list(graph_dict.keys()) 
                    + list([a for v in graph_dict.values() for a in v]))))
-    g.add_edges([(v, a) for v in graph_dict.keys() for a in graph_dict[v]])
+    for start, stops in graph_dict.items():
+        for stop in stops:
+            if not g.are_connected(start, stop):
+                g.add_edge(start,stop)
     if values:
         for key, value in values.items():
             vert = [v for v in g.vs if v['name']==key][0]
@@ -73,7 +76,11 @@ def graph_to_dataframe(G):
     graph_dataframe = pd.DataFrame(data = matrix, columns = G.vs['label'], index = G.vs['label'])
     return graph_dataframe
 
-def graph_to_matrix(G):
-    graph_mat = np.array(G.get_adjacency(attribute = 'weight').data)
-    graph_mat[np.diag_indices_from(graph_mat)]=1
+def graph_to_matrix(G, values=None):
+    if type(G) == dict:
+        G = graph_from_dict(G, values)
+    try:
+        graph_mat = np.array(G.get_adjacency(attribute = 'weight').data)
+    except ValueError:
+        graph_mat = np.array(G.get_adjacency().data)
     return graph_mat
