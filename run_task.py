@@ -44,7 +44,7 @@ seeds = {2:.9, 1:1, 6:.1,7:.01}
 values = create_value_graph(graph, seeds, weight=.98, steps = 3000,
                             scaling=.85, offset=.05)
 
-
+np.random.seed()
 # set up trials
 familiarization_trials = gen_structure_trials(graph, 
                                               stims, 

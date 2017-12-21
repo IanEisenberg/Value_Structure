@@ -23,7 +23,6 @@ class RLTask(BaseExp):
     def __init__(self, expid, subjid, save_dir, stim_files, values, 
                  sequence_type = 'structured', fullscreen = False,
                  **trial_kwargs):
-        super(RLTask, self).__init__(expid, subjid, save_dir, fullscreen)
         # set up "holder" variables
         self.RLdata = []  
         self.trialnum = 0
@@ -52,6 +51,8 @@ class RLTask(BaseExp):
                                                            **trial_kwargs)            
         # set up static variables
         self.action_keys = ['left','right']
+        # init Base Exp
+        super(RLTask, self).__init__(expid, subjid, save_dir, fullscreen)
             
     #**************************************************************************
     # ******* Display Functions **************

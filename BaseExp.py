@@ -42,12 +42,11 @@ class BaseExp(object):
     # ******* Function to Save Data **************
     #**************************************************************************
     
-    def toJSON(self):
+    def toJSON(self, excluded_keys=[]):
         """ log the initial conditions for the task. Exclude the list of all
         trials (stimulusinfo), the bot, and taskinfo (self.__dict__ includes 
         all of the same information as taskinfo)
         """
-        excluded_keys = []
         init_dict = {k:self.__dict__[k] for k in self.__dict__.iterkeys() if k 
                     not in excluded_keys}
         return json.dumps(init_dict)

@@ -28,7 +28,6 @@ class StructureTask(BaseExp):
     def __init__(self, expid, subjid, save_dir, stim_files, graph, 
                  trials, familiarization_trials, 
                  fullscreen = False):
-        super(StructureTask, self).__init__(expid, subjid, save_dir, fullscreen)
         # set up "holder" variables
         self.structuredata = []  
         self.pointtracker = 0
@@ -46,6 +45,8 @@ class StructureTask(BaseExp):
         np.random.shuffle(self.action_keys)
         self.n_value_ratings = 3
         self.test_familiarization = True
+        # init Base Exp
+        super(StructureTask, self).__init__(expid, subjid, save_dir, fullscreen)
             
     #**************************************************************************
     # ******* Display Functions **************
