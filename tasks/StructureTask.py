@@ -303,6 +303,7 @@ class StructureTask(BaseExp):
         
         # clean up and save
         taskdata = {
+                'stim_files': self.stim_files,
                 'graph': self.graph,
                 'action_keys': self.action_keys
                 } 

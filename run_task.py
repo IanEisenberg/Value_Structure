@@ -7,7 +7,7 @@ from utils.utils import create_value_graph, gen_structure_trials
 
 # ************Experiment Setup********************************
 # subject parameters
-subj = 'test' #raw_input('subject id: ')
+subj = raw_input('subject id: ')
 save_dir = os.path.join('Data')
 n_structure_trials = 1400
 n_familiarization_trials = 30
@@ -36,11 +36,10 @@ graph = {0: [1,2,3,14],
 stims = ['images/%s.png' % str(i+1) for i in graph.keys()]
 np.random.shuffle(stims)
 
-
 # create value graph
 
 np.random.seed(2222)
-seeds = {2:.9,1:1,6:.1,7:.01}
+seeds = {2:.9, 1:1, 6:.1,7:.01}
 values = create_value_graph(graph, seeds, weight=.98, steps = 3000,
                             scaling=.85, offset=.05)
 

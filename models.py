@@ -161,7 +161,7 @@ def SR_TD(data, alpha, gamma):
 class SR_RLModel(BasicRLModel):
     """ SR-RL Model 
     
-    Russek, E. M., et al (2017). Predictive representations... 
+    Russek, E. M., et al (2017). Predictive representations can link model-based reinforcement learning to model-free mechanisms. 
     
     """
     def __init__(self, RLdata, StructureData, verbose=False):

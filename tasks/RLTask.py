@@ -249,6 +249,7 @@ class RLTask(BaseExp):
         
         # clean up and save
         taskdata = {
+                'stim_files': self.stim_files,
                 'values': self.values,
                 'action_keys': self.action_keys
                 } 
