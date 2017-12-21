@@ -39,12 +39,13 @@ plt.figure(figsize=(12,8))
 RL.rt.hist(bins=50)
 
 
-from models import BasicRLModel, GraphRLModel
+from models import BasicRLModel, GraphRLModel, SR_RLModel
 
 
 basic_m = BasicRLModel(RL)
 graph_m = GraphRLModel(RL, meta['structure']['graph'])
-for model in [basic_m, graph_m]:
+SR_m = SR_RLModel(RL, structure)
+for model in [basic_m, graph_m, SR_m]:
     model.optimize()
     p, vals = model.run_data()
 

@@ -1,13 +1,16 @@
+from collections import OrderedDict as odict
 from lmfit import Minimizer, Parameters
 import numpy as np
+import pandas as pd
+
 # Functions to define Shift Task model (Wilson & Niv, 2012)
 class BasicRLModel(object):
     """ Basic RL Model for RL task """
     def __init__(self, data, verbose=False):
         self.data = data
-        # get data
+        self.init_val = .5
         self.stims = np.unique(data.stim_indices.apply(lambda x: x[0]))
-        self.vals = {i:.5 for i in self.stims}
+        self.vals = odict({i: self.init_val for i in self.stims})
         
         # set up class vars
         self.decay = 0
@@ -18,7 +21,7 @@ class BasicRLModel(object):
             
     def get_choice_prob(self, trial):
         stims = trial.stim_indices
-        stim_values = [self.vals[stim] for stim in stims]
+        stim_values = [self.get_value(stim) for stim in stims]
                        
         # compute softmax decision probs
         f = lambda x: np.e**(self.beta*x)
@@ -40,16 +43,22 @@ class BasicRLModel(object):
         return {'beta': self.beta,
                 'lr': self.lr,
                 'eps': self.eps}
-        
+                
+    def get_value(self, stim):
+        return self.vals[stim]
+
     def update(self, trial):
         selected_stim = trial.selected_stim
         reward = trial.rewarded
-        value = self.vals[selected_stim]
+        value = self.get_value(selected_stim)
         delta = self.lr*(reward-value)
         self.vals[selected_stim] += delta
-
+    
+    def reset_vals(self):
+        for k in self.vals:
+            self.vals[k] = self.init_val
     def run_data(self):
-        self.vals = {i:.5 for i in self.stims}
+        self.reset_vals()
         probs = []  
         track_vals = []
         for i, trial in self.data.iterrows():
@@ -91,7 +100,7 @@ class GraphRLModel(BasicRLModel):
         self.graph_decay = 0 # if 0, no propagation
     
     def get_params(self):
-        params = super.get_params()
+        params = super(GraphRLModel, self).get_params()
         params['graphydecay'] = self.graph_decay
         return params
                 
@@ -135,3 +144,101 @@ class GraphRLModel(BasicRLModel):
                                                               'maxiter': 200})
         
         
+def SR_TD(data, alpha, gamma):
+    state_df = pd.DataFrame({'s': data.stim_index,
+                             'sprime': data.stim_index.shift(-1)}).iloc[:-1].astype(int)
+    states = state_df.s.unique()
+    M = np.identity(len(states)) # define future-state occupancy matrix
+    def update(s, sprime):
+        base = np.zeros(M.shape[1]); base[s]=1
+        delta = base+gamma*M[sprime,:]-M[s,:]
+        M[s,:] += alpha*delta
+    for i, trial in state_df.iterrows():
+        update(trial.s, trial.sprime)
+    return M
+    
+    
+class SR_RLModel(BasicRLModel):
+    """ SR-RL Model 
+    
+    Russek, E. M., et al (2017). Predictive representations... 
+    
+    """
+    def __init__(self, RLdata, StructureData, verbose=False):
+        super(SR_RLModel, self).__init__(RLdata, verbose)
+        self.structure = StructureData
+        self.SR_lr = .05
+        self.gamma = .99
+        self.M = self.SR_TD()
+        
+    def get_M(self):
+        return self.M
+        
+    def get_params(self):
+        params = super(SR_RLModel, self).get_params()
+        params['SR_lr'] = self.SR_lr
+        params['gamma'] = self.gamma
+        return params
+    
+    def get_value(self, stim):
+        return self.M[stim,:].dot(self.vals.values())
+        
+    def optimize(self):
+        def loss(pars):
+            #unpack params
+            parvals = pars.valuesdict()
+            # base RL params
+            self.beta = parvals['beta']
+            self.eps = parvals['eps']
+            self.lr = parvals['lr']
+            # SR params
+            self.gamma = parvals['gamma']
+            self.SR_lr = parvals['SR_lr']
+            self.M = self.SR_TD()
+            return self.get_log_likelihood()
+        
+        def track_loss(params, iter, resid):
+            if iter%100==0:
+                print(iter, resid)
+            
+        params = Parameters()
+        params.add('beta', value=1, min=.01, max=100)
+        params.add('eps', value=0, min=0, max=1)
+        params.add('lr', value=.1, min=.000001, max=1)
+        params.add('gamma', value=1, min=0, max=1)
+        params.add('SR_lr', value=0, min=0, max=1)
+        
+        if self.verbose==False:
+            fitter = Minimizer(loss, params)
+        else:
+            fitter = Minimizer(loss, params, iter_cb=track_loss)
+        fitter.scalar_minimize(method='Nelder-Mead', options={'xatol': 1e-3,
+                                                              'maxiter': 200})
+        
+    def SR_TD(self):
+        state_df = pd.DataFrame({'s': self.structure.stim_index,
+                                 'sprime': self.structure.stim_index.shift(-1)}).iloc[:-1].astype(int)
+        states = state_df.s.unique()
+        M = np.identity(len(states)) # define future-state occupancy matrix
+        def update(s, sprime):
+            base = np.zeros(M.shape[1]); base[s]=1
+            delta = base+self.gamma*M[sprime,:]-M[s,:]
+            M[s,:] += self.SR_lr*delta
+        for i, trial in state_df.iterrows():
+            update(trial.s, trial.sprime)
+        return M
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

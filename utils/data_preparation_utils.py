@@ -61,7 +61,6 @@ def post_process_RL(RL_df):
 
 def post_process_structure(structure_df):
     # scrub data
-    structure_df = structure_df[~structure_df.rt.isnull()]
     structure_df = structure_df.query('exp_stage == "structure_learning"')
     # add new columns
     # add community column
