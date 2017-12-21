@@ -312,7 +312,7 @@ class StructureTask(BaseExp):
         
         self.presentInstruction(
             """
-            Done with the first task! 
+            Done with the first task! Take a break for a few minutes.
             
             Please wait for the experimenter.
             """)

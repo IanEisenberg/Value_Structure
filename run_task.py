@@ -7,6 +7,7 @@ from utils.utils import create_value_graph, gen_structure_trials
 
 # ************Experiment Setup********************************
 # subject parameters
+print('Enter the subject ID')
 subj = raw_input('subject id: ')
 save_dir = os.path.join('Data')
 n_structure_trials = 1400
@@ -62,7 +63,6 @@ structure_trials = gen_structure_trials(graph,
 
 
 # start task
-# use seeds [0,1,10,11] for 15 node graph
 structure = StructureTask(expid='structure',
                           subjid=subj, 
                           save_dir=save_dir, 

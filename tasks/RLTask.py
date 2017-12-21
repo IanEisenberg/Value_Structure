@@ -49,8 +49,7 @@ class RLTask(BaseExp):
         elif self.sequence_type == 'semistructured':
             self.all_trials = gen_semistructured_RL_trials(stim_files, 
                                                            values, 
-                                                           **trial_kwargs)
-            
+                                                           **trial_kwargs)            
         # set up static variables
         self.action_keys = ['left','right']
             
@@ -216,13 +215,17 @@ class RLTask(BaseExp):
         text =  \
             """
   In this task, two images from the last task will 
-  be shown on the screen at once, as shown.\n\n\n\n\n\n\n\n\n\n\n
+  be shown on the screen at once, as shown.
+  
+  You select one image by pressing the 
+  correponding arrow key.\n\n\n\n\n\n\n\n\n\n\n
                   Press 5 to continue...
             """
         intro_stim=visual.TextStim(self.win, 
                                    text=text,
                                    font='BiauKai',
                                    height=.07,
+                                   wrapWidth=100,
                                    pos=(0,.1))
         
         instruction_stims = [self.stim_files[0], self.stim_files[7]]
@@ -232,15 +235,14 @@ class RLTask(BaseExp):
 
         self.presentInstruction(
             """
-            You select one image by pressing the correponding arrow key.
-            
             Each image has a chance of earning 1 point when you select it.
             The chance of earning a point is different for each image:
             some images have a higher chance to earn a point than others.
             
-            Your goal in this task is to get as many points as possible. Each
-            trial is short, so please respond quickly while trying to
-            pick the more rewarding shape.
+            Your goal in this task is to get as many points as possible. 
+            
+            Each trial is short, so please respond quickly while trying 
+            to pick the more rewarding shape.
             
             Press 5 to start...
             """)
