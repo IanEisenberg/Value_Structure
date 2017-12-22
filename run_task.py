@@ -66,7 +66,7 @@ RLtask = RLTask(expid='RL',
                 save_dir=save_dir,
                 stim_files=stims,
                 values=values,
-                sequence_type='semistructured',
+                sequence_type='structured',
                 repeats=6,
                 fullscreen=False)
 

@@ -13,8 +13,7 @@ from BaseExp import BaseExp
 import json
 import numpy as np
 from psychopy import visual, core, event
-from utils.utils import (gen_random_RL_trials, gen_semistructured_RL_trials,
-                        gen_structured_RL_trials)
+from utils.utils import (gen_random_RL_trials, gen_structured_RL_trials)
 
 class RLTask(BaseExp):
     """ class defining a probabilistic context task
@@ -36,7 +35,6 @@ class RLTask(BaseExp):
         self.correct_tracker = 0 # used to determine when to switch stim set
         assert self.sequence_type in ['structured', 'random', 'semistructured']
         if self.sequence_type == 'structured':
-            
             self.correct_thresh = 10
             self.all_trials = gen_structured_RL_trials(stim_files, 
                                                        values, 
@@ -44,11 +42,7 @@ class RLTask(BaseExp):
         elif self.sequence_type == 'random':
             self.all_trials = gen_random_RL_trials(stim_files, 
                                                    values, 
-                                                   **trial_kwargs)
-        elif self.sequence_type == 'semistructured':
-            self.all_trials = gen_semistructured_RL_trials(stim_files, 
-                                                           values, 
-                                                           **trial_kwargs)            
+                                                   **trial_kwargs)           
         # set up static variables
         self.action_keys = ['left','right']
         # init Base Exp

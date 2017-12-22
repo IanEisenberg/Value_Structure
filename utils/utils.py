@@ -58,7 +58,7 @@ def gen_balanced_sequence(graph, repetitions):
     np.random.shuffle(sequence)
     return sequence
 
-def gen_random_RL_trials(stims, values, repeats=3,  duration=2, 
+def gen_random_RL_trials(stims, values, repeats=3,  duration=2.5, 
                          feedback_duration=1, seed=None):
     if seed:
         np.random.seed(seed)
@@ -83,12 +83,21 @@ def gen_random_RL_trials(stims, values, repeats=3,  duration=2,
     np.random.seed()
     return trials
     
-def gen_semistructured_RL_trials(stims, values, repeats=6,  duration=2, 
-                                 feedback_duration=1, seed=None):
+def gen_structured_RL_trials(stims, values, sets=2, 
+                                 duration=2.5, feedback_duration=1, seed=None):
     if seed:
         np.random.seed(seed)
-    first_set = [1,2,6,7,11,12]
-    stim_rollout = [first_set, list(set(values.keys())-set(first_set))]
+    if sets == 2:
+        repeats = 6
+        stim_rollout = [[1,2,6,7,11,12], 
+                        [3,4,5,8,9,10,13,14]]
+    elif sets == 5:
+        repeats = 12
+        stim_rollout = [[1,6,11],
+                        [2,7,12],
+                        [3,8,13],
+                        [4,5,9,10],
+                        [0,14]]
     
     trials = []
     for available_stims in stim_rollout:
@@ -110,60 +119,6 @@ def gen_semistructured_RL_trials(stims, values, repeats=6,  duration=2,
             trials.append(trial)
     np.random.seed()
     return trials
-    
-
-  
-def gen_structured_RL_trials(stims, values, max_repeats=50, duration=2, 
-                             feedback_duration=1, seed=None):
-    if seed:
-        np.random.seed(seed)
-    stim_rollout = [[1,13], # 1> 13
-                    [5,9], # 5 > 9
-                    [6,8], # 6 > 8
-                    [2,7,12], # 2 > 7 > 12
-                    [0,3,11,14], # 0 > 3 > 11 > 14
-                    [4,10] # 4 > 10
-                    ]
-                    
-    all_trials = []
-    while len(stim_rollout) > 0:
-        # get trials per condition
-        trials = []
-        available_stims = stim_rollout.pop(0)
-        permutes = list(permutations(available_stims,2)) * max_repeats
-        np.random.shuffle(permutes)
-        for stim1, stim2 in permutes:
-            stim_values =  [values[stim1], values[stim2]]
-            rewards = [int(r.random() < v) for v in stim_values]
-            trial = {'stim_indices': [stim1, stim2],
-                     'stim_files': [stims[stim1], stims[stim2]],
-                     'rewards': rewards,
-                     'values': stim_values,
-                     'correct_choice': int(stim_values[1] > stim_values[0]),
-                     'duration': duration,
-                     'feedback_duration': feedback_duration,
-                     'stim_set': available_stims,
-                     'exp_stage': 'RL_task'}
-            trials.append(trial)
-        all_trials.append(trials)
-    # add final section with all stims
-    trials = []
-    available_stims = values.keys()
-    permutes = list(permutations(available_stims,2))
-    np.random.shuffle(permutes)
-    for stim1, stim2 in permutes:
-        rewards = [r.random() < v for v in [values[stim1], values[stim2]]]
-        trial = {'stim_indices': [stim1, stim2],
-                 'stim_files': [stims[stim1], stims[stim2]],
-                 'rewards': rewards,
-                 'duration': duration,
-                 'feedback_duration': feedback_duration,
-                 'stim_set': available_stims}
-        trials.append(trial)
-    all_trials.append(trials)
-    
-    np.random.seed()
-    return all_trials
     
 def gen_nbackstructure_trials(graph, stims, trial_count=100, duration=1.5, 
                          exp_stage=None, balanced=False,  seed=None,
