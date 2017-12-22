@@ -255,11 +255,11 @@ class StructureTask(BaseExp):
                 self.run_familiarization_test()
                 acc = np.mean([t['correct'] for t in self.structuredata 
                                if t['exp_stage'] == 'familiarization_test'])
-                if acc>.9:
+                if acc>.8 or num_misses>6:
                     learned=True
                 else:
                     num_misses += 1
-                    if num_misses%3==0:
+                    if num_misses==4:
                         self.presentInstruction(
                             """
                             Seems you could use a refresher! Please look over the

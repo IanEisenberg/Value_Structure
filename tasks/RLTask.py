@@ -152,7 +152,6 @@ class RLTask(BaseExp):
                 self.presentTextToWindow('+1 point', color=[0,1,0])
             else:
                 self.presentTextToWindow('+0 points', color=[1,0,0])
-            print('Correct?: %s' % trial['correct'])
         else:
             self.presentTextToWindow('Please Respond Faster', color=[1,1,1])
         core.wait(trial['feedback_duration'])
