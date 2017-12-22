@@ -1,8 +1,8 @@
 import numpy as np
 import os
 from tasks.RLTask import RLTask
-from tasks.StructureTask import StructureTask
-from utils.utils import create_value_graph, gen_structure_trials
+from tasks.NBackStructureTask import NBackStructureTask
+from utils.utils import create_value_graph
 
 
 # ************Experiment Setup********************************
@@ -45,32 +45,20 @@ values = create_value_graph(graph, seeds, weight=.98, steps = 3000,
                             scaling=.85, offset=.05)
 
 np.random.seed()
-# set up trials
-familiarization_trials = gen_structure_trials(graph, 
-                                              stims, 
-                                              n_familiarization_trials, 
-                                              duration=None,
-                                              exp_stage='familiarization_test',
-                                              balanced=True)
-
-structure_trials = gen_structure_trials(graph, 
-                                        stims, 
-                                        n_structure_trials, 
-                                        exp_stage='structure_learning',
-                                        proportion_rotated=.2)
 
 
+# set up task
+structure_trial_params = {'N': 2,
+                          'num_trials': n_structure_trials,
+                          'num_practice_trials': 60}
 
-
-# start task
-structure = StructureTask(expid='structure',
+structure = NBackStructureTask(expid='structure',
                           subjid=subj, 
                           save_dir=save_dir, 
                           stim_files=stims, 
                           graph=graph, 
-                          trials=structure_trials, 
-                          familiarization_trials=familiarization_trials, 
-                          fullscreen=True)
+                          trial_params=structure_trial_params,
+                          fullscreen=False)
 
                      
 RLtask = RLTask(expid='RL',
@@ -80,7 +68,8 @@ RLtask = RLTask(expid='RL',
                 values=values,
                 sequence_type='semistructured',
                 repeats=6,
-                fullscreen=True)
+                fullscreen=False)
 
+# start task
 structure.run_task()
 points = RLtask.run_task()

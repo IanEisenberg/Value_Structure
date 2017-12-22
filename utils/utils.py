@@ -165,10 +165,29 @@ def gen_structured_RL_trials(stims, values, max_repeats=50, duration=2,
     np.random.seed()
     return all_trials
     
-
+def gen_nbackstructure_trials(graph, stims, trial_count=100, duration=1.5, 
+                         exp_stage=None, balanced=False,  seed=None,
+                         n=2):
+    if seed:
+        np.random.seed(seed)
+    prop_match = 0
+    while prop_match<.18 or prop_match > .22:
+        sequence = gen_sequence(graph, trial_count)
+        nback_match = (np.roll(sequence, n)==np.array(sequence))[n:]
+        prop_match = np.mean(nback_match)
+    nback_match = np.append([False]*2, nback_match).astype(int)
+    trials = []
+    for i, stim_i in enumerate(sequence):
+        trial = {'stim_index': stim_i,
+                 'stim_file': stims[stim_i],
+                 'duration': duration,
+                 'exp_stage': exp_stage,
+                 'nback_match': nback_match[i]}
+        trials.append(trial)
+    np.random.seed()
+    return trials    
     
-    
-def gen_structure_trials(graph, stims, trial_count=100, duration=1.5, 
+def gen_rotstructure_trials(graph, stims, trial_count=100, duration=1.5, 
                          exp_stage=None, balanced=False,  seed=None,
                          proportion_rotated=.2):
     if seed:

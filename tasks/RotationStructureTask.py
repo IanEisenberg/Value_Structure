@@ -21,7 +21,7 @@ from random import sample
 error_sound = sound.Sound(secs=.1,value=500)
 miss_sound = sound.Sound(secs=.1,value=700)
 
-class StructureTask(BaseExp):
+class RotationStructureTask(BaseExp):
     """ class defining a probabilistic context task
     """
     
@@ -46,7 +46,7 @@ class StructureTask(BaseExp):
         self.n_value_ratings = 3
         self.test_familiarization = True
         # init Base Exp
-        super(StructureTask, self).__init__(expid, subjid, save_dir, fullscreen)
+        super(RotationStructureTask, self).__init__(expid, subjid, save_dir, fullscreen)
             
     #**************************************************************************
     # ******* Display Functions **************
