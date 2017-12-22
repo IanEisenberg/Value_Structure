@@ -131,6 +131,8 @@ class StructureTask(BaseExp):
                 trial['correct']=True
                 # record points for bonus
                 self.pointtracker += 1
+            else:
+                trial['correct']=False
         else:
             miss_sound.play()
             core.wait(.5)

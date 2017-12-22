@@ -62,6 +62,10 @@ def post_process_RL(RL_df):
 def post_process_structure(structure_df):
     # scrub data
     structure_df = structure_df.query('exp_stage == "structure_learning"')
+    # replace "correct" nans with False if there is a rt
+    index = structure_df.query('rt==rt and correct!=correct').index
+    structure_df.loc[index,'correct']=False
+    
     # add new columns
     # add community column
     community = structure_df.stim_index.apply(get_community)
@@ -102,7 +106,14 @@ def process_data(subj):
     return data
     
 # helper functions
-def get_community(index):
+def get_community(indices):
     communities = [[0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14]]
-    return [i for i, comm in enumerate(communities) if index in comm][0]
+    if type(indices) == list:
+        community_labels = []
+        for index in indices:
+            community_labels.append([i for i, comm in enumerate(communities) if index in comm][0])
+        return community_labels
+        
+    else:
+        return [i for i, comm in enumerate(communities) if indices in comm][0]
             

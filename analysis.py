@@ -8,7 +8,7 @@ from utils.data_preparation_utils import process_data
 
 #test code
 
-data = process_data('test')
+data = process_data('RA')
 
 RL = data['RL']
 structure = data['structure']
@@ -26,11 +26,19 @@ res.summary()
 # descriptive plots
 sns.set_context('poster')
 sns.set_palette("Set1", 8, .75)
-plt.figure(figsize=(12,8))
+plt.figure(figsize=(24,16))
+plt.subplot(2,2,1)
 sns.boxplot(x='stim_index', y='rt', hue='transition_node', data=structure)
 
-plt.figure(figsize=(12,8))
+plt.subplot(2,2,2)
 sns.pointplot(x='stim_index', y='correct', data=structure,   join=False, 
+              hue='transition_node', scale=1, errwidth=3)
+# average across stim
+plt.subplot(2,2,3)
+sns.boxplot(x='transition_node', y='rt', data=structure)
+
+plt.subplot(2,2,4)
+sns.pointplot(x='transition_node', y='correct', data=structure, join=False, 
               hue='transition_node', scale=1, errwidth=3)
 
 # *****************************************************************************
@@ -39,23 +47,44 @@ sns.pointplot(x='stim_index', y='correct', data=structure,   join=False,
 plt.figure(figsize=(12,8))
 RL.rt.hist(bins=50)
 
-basic_m = BasicRLModel(RL)
-graph_m = GraphRLModel(RL, meta['structure']['graph'])
-SR_m = SR_RLModel(RL, structure)
-for model in [basic_m, graph_m, SR_m]:
-    model.optimize()
-    p, vals = model.run_data()
+switch_point = np.where(RL.stim_set==True)[0][0]
 
-compare_df = RL.loc[:,['response','stim_indices', 'selected_stim']]
-ignored = compare_df.apply(lambda x: x.stim_indices[int(1-x.response)] \
-                                    if not pd.isnull(x.response) else np.nan, axis=1)
+# before switch
+models = {}
+basic_m = BasicRLModel(RL)
+SR_m = SR_RLModel(RL, structure)
+for model in [basic_m, SR_m]:
+    model.optimize(stop=switch_point)
+    p, vals = model.run_data()
+models['before_switch'] = {'basic': basic_m,
+                           'SR': SR_m}
+# after switch
+basic_m = BasicRLModel(RL)
+SR_m = SR_RLModel(RL, structure)
+for model in [basic_m, SR_m]:
+    model.optimize(start=switch_point, stop=switch_point*2)
+    p, vals = model.run_data()
+models['after_switch'] = {'basic': basic_m,
+                           'SR': SR_m}
+
+for key,vals in models.items():
+    print('*'*79)
+    if key == 'after_switch':
+        start = switch_point
+        stop = switch_point*2
+    else:
+        start = None
+        stop = switch_point
+    print('%s: start %s, stop %s' % (key, start, stop))
+    for name, m in vals.items():
+        print('%s: ' % name, m.get_log_likelihood(start, stop))
 
 
 # drive M from one step transition probabilities
 from utils.graph_utils import graph_to_matrix
 from models import SR_from_transition
 graph = meta['structure']['graph']
-onestep = graph_to_matrix(graph)/4.0
+onestep = graph_to_matrix(graph)/5.0
 TrueM = SR_from_transition(onestep, SR_m.gamma)
 M = SR_m.get_M()
 np.corrcoef(M.flatten(),TrueM.flatten())

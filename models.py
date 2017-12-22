@@ -33,9 +33,13 @@ class BasicRLModel(object):
         choice_prob = (1-self.eps)*choice_prob + (self.eps)*(1/3)
         return choice_prob
     
-    def get_log_likelihood(self):
+    def get_log_likelihood(self, start=None, stop=None):
         """ Returns summed negative log likelihood """
         probs, track_vals = self.run_data()
+        if start:
+            probs = probs[start:]
+        if stop:
+            probs = probs[:stop]
         neg_log_likelihood = -np.sum(np.log(probs))
         return neg_log_likelihood
         
@@ -67,14 +71,14 @@ class BasicRLModel(object):
             track_vals.append(self.vals.copy())
         return probs, track_vals
     
-    def optimize(self):
+    def optimize(self, start=None, stop=None):
         def loss(pars):
             #unpack params
             parvals = pars.valuesdict()
             self.beta = parvals['beta']
             self.lr = parvals['lr']
             self.eps = parvals['eps']
-            return self.get_log_likelihood()
+            return self.get_log_likelihood(start, stop)
         
         def track_loss(params, iter, resid):
             if iter%100==0:
@@ -116,7 +120,7 @@ class GraphRLModel(BasicRLModel):
             delta = self.lr*(reward-value)*self.graph_decay
             self.vals[stim] += delta
     
-    def optimize(self):
+    def optimize(self, start=None, stop=None):
         def loss(pars):
             #unpack params
             parvals = pars.valuesdict()
@@ -124,7 +128,7 @@ class GraphRLModel(BasicRLModel):
             self.eps = parvals['eps']
             self.graph_decay = parvals['graph_decay']
             self.lr = parvals['lr']
-            return self.get_log_likelihood()
+            return self.get_log_likelihood(start, stop)
         
         def track_loss(params, iter, resid):
             if iter%100==0:
@@ -188,7 +192,7 @@ class SR_RLModel(BasicRLModel):
     def get_value(self, stim):
         return self.M[stim,:].dot(self.vals.values())
         
-    def optimize(self):
+    def optimize(self, start=None, stop=None):
         def loss(pars):
             #unpack params
             parvals = pars.valuesdict()
@@ -200,7 +204,7 @@ class SR_RLModel(BasicRLModel):
             self.gamma = parvals['gamma']
             self.SR_lr = parvals['SR_lr']
             self.M = self.SR_TD()
-            return self.get_log_likelihood()
+            return self.get_log_likelihood(start, stop)
         
         def track_loss(params, iter, resid):
             if iter%100==0:
