@@ -36,6 +36,7 @@ def get_descriptive_stats(RL_df, structure_df):
     
 def post_process_RL(RL_df):
     # scrub data
+    RL_df = RL_df.query('exp_stage == "RL_task"')
     RL_df = RL_df[~RL_df.rt.isnull()]
     # add new columns
     stim_choices = RL_df.apply(lambda x: x.stim_indices[int(x.response)] \

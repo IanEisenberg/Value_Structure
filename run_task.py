@@ -11,7 +11,7 @@ print('Enter the subject ID')
 subj = raw_input('subject id: ')
 save_dir = os.path.join('Data')
 n_structure_trials = 1400
-n_familiarization_trials = 30
+n_structure_practice_trials = 60
 
 
 
@@ -50,7 +50,7 @@ np.random.seed()
 # set up task
 structure_trial_params = {'N': 2,
                           'num_trials': n_structure_trials,
-                          'num_practice_trials': 60,
+                          'num_practice_trials': n_structure_practice_trials,
                           'seed': 10101}
 
 structure = NBackStructureTask(expid='structure',
@@ -61,7 +61,7 @@ structure = NBackStructureTask(expid='structure',
                           trial_params=structure_trial_params,
                           fullscreen=False)
 
-                     
+RL_trial_params = {'sets': 5}
 RLtask = RLTask(expid='RL',
                 subjid=subj,
                 save_dir=save_dir,

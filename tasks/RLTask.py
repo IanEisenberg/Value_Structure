@@ -21,7 +21,7 @@ class RLTask(BaseExp):
     
     def __init__(self, expid, subjid, save_dir, stim_files, values, 
                  sequence_type = 'structured', fullscreen = False,
-                 **trial_kwargs):
+                 trial_params = {}):
         # set up "holder" variables
         self.RLdata = []  
         self.trialnum = 0
@@ -33,16 +33,16 @@ class RLTask(BaseExp):
         self.stim_files = stim_files
         self.sequence_type = sequence_type
         self.correct_tracker = 0 # used to determine when to switch stim set
+        
         assert self.sequence_type in ['structured', 'random', 'semistructured']
         if self.sequence_type == 'structured':
-            self.correct_thresh = 10
             self.all_trials = gen_structured_RL_trials(stim_files, 
                                                        values, 
-                                                       **trial_kwargs)
+                                                       **trial_params)
         elif self.sequence_type == 'random':
             self.all_trials = gen_random_RL_trials(stim_files, 
                                                    values, 
-                                                   **trial_kwargs)           
+                                                   **trial_params)           
         # set up static variables
         self.action_keys = ['left','right']
         # init Base Exp
@@ -154,52 +154,22 @@ class RLTask(BaseExp):
         self.writeToLog(json.dumps(trial))
         self.RLdata.append(trial)
         return trial
-    
- 
-
-                            
+                 
     def run_RLtask(self):
+        timer_text = "Take a break!\n\nContinue in: \n\n       "
         self.startTime = core.getTime()
         # start graph learning
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
-        
         # use different scripts depending on whether the trials were generated
         # using generate_structured_RL_trials or generate_random_RL_trials
-        if self.sequence_type == 'structured':
-            for i, trial_set in enumerate(self.all_trials[:-1]):
-                if i == 3:
-                    self.presentInstruction(
-                            """
-                            Take a break!
-                                            
-                    Press 5 when you are ready to continue
-                            """)
-                for trial in trial_set:
-                    self.presentTrial(trial)
-                    if self.correct_tracker >= self.correct_thresh:
-                        break
-            # another break
-            self.presentInstruction(
-                        """
-                        Take a break!
-                                        
-                Press 5 when you are ready to continue
-                        """)
-            # final trials
-            for trial in self.all_trials[-1]:
-                    self.presentTrial(trial)
-        else:
-            pause_trials = (len(self.all_trials)/3, len(self.all_trials)/3*2)
-            for trial in self.all_trials:
-                self.presentTrial(trial)
-                if self.trialnum in pause_trials:
-                    self.presentInstruction(
-                            """
-                    Take a break!
-                                            
-                    Press 5 when you are ready to continue
-                            """)
+        pause_trials = (len(self.all_trials)/3, len(self.all_trials)/3*2)
+        for trial in self.all_trials:
+            self.presentTrial(trial)
+            if self.trialnum in pause_trials:
+                self.presentTimer(duration=30, text=timer_text)
+                self.RLdata.append({'exp_stage': 'break',
+                                    'duration': 30})
             
     def run_task(self, pause_trials = None):
         self.setupWindow()
@@ -212,7 +182,7 @@ class RLTask(BaseExp):
   be shown on the screen at once, as shown.
   
   You select one image by pressing the 
-  correponding arrow key.\n\n\n\n\n\n\n\n\n\n\n
+  correponding arrow key (left or right).\n\n\n\n\n\n\n\n\n\n\n
                   Press 5 to continue...
             """
         intro_stim=visual.TextStim(self.win, 
@@ -230,15 +200,22 @@ class RLTask(BaseExp):
         self.presentInstruction(
             """
             Each image has a chance of earning 1 point when you select it.
+            Your goal in this task is to get as many points as possible.
+            
             The chance of earning a point is different for each image:
             some images have a higher chance to earn a point than others.
             
-            Your goal in this task is to get as many points as possible. 
+            For example, one image may result in a point 70% of the time
+            when you click on it, while another image may result in a point
+            50% of the time.
+            
+            If both of those images came up on one trial, you would 
+            want to select the 70% image.
             
             Each trial is short, so please respond quickly while trying 
             to pick the more rewarding shape.
             
-            Press 5 to start...
+            Wait for the experimenter
             """)
                 
         self.run_RLtask()
@@ -258,8 +235,7 @@ class RLTask(BaseExp):
             Done with the second task! You earned %s points.
             
             Please wait for the experimenter.
-            
-            Press 5 to continue...
             """ % str(self.pointtracker))
+        self.closeWindow()
         return self.pointtracker
 

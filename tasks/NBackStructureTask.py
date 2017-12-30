@@ -187,14 +187,16 @@ class NBackStructureTask(BaseExp):
     def run_graph_learning(self):
         self.trialnum = 0
         # start graph learning
-        pause_trials = [len(self.trials)/4*i for i in range(1,4)]
-        timer_text = "Take a break!\n\nContinue in: \n\n     "
+        pause_trials = [len(self.trials)//4*i for i in range(1,4)]
+        timer_text = "Take a break!\n\nContinue in: \n\n       "
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
         for trial in self.trials:
             self.presentTrial(trial)
             if self.trialnum in pause_trials:
                 self.presentTimer(duration=30, text=timer_text)
+                self.structuredata.append({'exp_stage': 'break',
+                                           'duration': 30})
         
     def run_task(self, pause_trials = None):
         self.setupWindow()
@@ -283,7 +285,7 @@ class NBackStructureTask(BaseExp):
             avg_acc = self.run_graph_practice()
             self.presentTextToWindow('Wait for Experimenter')
             keys, time = self.waitForKeypress([self.trigger_key, '0'])
-            if keys[0] == self.trigger_key:
+            if keys[0][0] == self.trigger_key:
                 practice_over = True
             else:
                 practice_repeats += 1
@@ -327,4 +329,5 @@ class NBackStructureTask(BaseExp):
             
             Please wait for the experimenter.
             """)
+        self.closeWindow()
 
