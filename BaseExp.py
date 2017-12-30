@@ -102,15 +102,20 @@ class BaseExp(object):
             self.checkRespForQuitKey(resp)
             event.clearEvents()
     
-    def presentTextToWindow(self, text, size=.15, color=None, duration=None):
+    def presentTextToWindow(self, text, size=.15, color=None, duration=None,
+                            position=None, flip=True):
         """ present a text message to the screen
         return:  time of completion
         """
         if color is None:
             color = self.text_color
+        if position is None:
+            position = (0,0)
         if not self.text_stim:
             self.text_stim=visual.TextStim(self.win, 
-                                          text=text,font='BiauKai',
+                                          text=text,
+                                          font='BiauKai',
+                                          pos=position,
                                           height=size,
                                           color=color, 
                                           colorSpace=u'rgb',
@@ -124,10 +129,33 @@ class BaseExp(object):
             self.text_stim.setHeight(size)
             self.text_stim.setColor(self.text_color)
         self.text_stim.draw()
-        self.win.flip()
+        if flip:
+            self.win.flip()
         if duration:
             core.wait(duration)
         return core.getTime()
+    
+    def presentTimer(self, duration, timer_position=None, text=None,
+                     countdown=True):
+        """ Presents a timer to the subject
+        
+        Args:
+            Duration: integer. How many seconds should the timer last?
+            timer_position: tuple, passed to visual.TextStim
+            text: optional text to embed the time in. Time will be added to end
+                of text
+        """
+        clock = core.Clock()
+        while clock.getTime() < duration:
+            time = int(clock.getTime())
+            if countdown:
+                time = duration-time
+            if text:
+                timer_text = text + '{0: ^5}'.format(time)
+            else:
+                timer_text = time
+            self.presentTextToWindow(timer_text, position=timer_position)
+        self.win.flip()
         
     def setupWindow(self, **kwargs):
             """ set up the main window
