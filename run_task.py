@@ -50,7 +50,8 @@ np.random.seed()
 # set up task
 structure_trial_params = {'N': 2,
                           'num_trials': n_structure_trials,
-                          'num_practice_trials': 60}
+                          'num_practice_trials': 60,
+                          'seed': 10101}
 
 structure = NBackStructureTask(expid='structure',
                           subjid=subj, 
@@ -67,7 +68,6 @@ RLtask = RLTask(expid='RL',
                 stim_files=stims,
                 values=values,
                 sequence_type='structured',
-                repeats=6,
                 fullscreen=False)
 
 # start task
