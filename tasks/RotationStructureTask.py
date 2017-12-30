@@ -250,7 +250,7 @@ class RotationStructureTask(BaseExp):
                         %s key: Unrotated
                         %s key: Rotated
                         
-                Press 5 to continue...
+                Wait for the experimenter.
                 """ % (self.action_keys[0].title(), 
                        self.action_keys[1].title()))
             while not learned:     
@@ -299,7 +299,7 @@ class RotationStructureTask(BaseExp):
             
             There will be two breaks.
             
-            Press 5 to start.
+            Wait for the experimenter
             """ % (self.action_keys[0].title(), self.action_keys[1].title()))
         
         self.run_graph_learning()

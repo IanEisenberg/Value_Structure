@@ -46,14 +46,14 @@ class NBackStructureTask(BaseExp):
         self.trial_params.update(trial_params)
         
         # define trial sequence
-        practice_seed = self.trial_params['seed']+10 if self.trial_params['seed']  else None
+        self.practice_seed = self.trial_params['seed']+10 if self.trial_params['seed']  else None
         self.practice_trials = gen_nbackstructure_trials(
                                 self.graph, 
                                 self.stim_files, 
                                 self.trial_params['num_practice_trials'], 
                                 exp_stage='practice_structure_learning',
                                 n=self.trial_params['N'],
-                                seed=practice_seed)
+                                seed=self.practice_seed)
         np.mean([i['nback_match'] for i in self.practice_trials])
 
         self.trials = gen_nbackstructure_trials(
@@ -156,7 +156,7 @@ class NBackStructureTask(BaseExp):
         else:
             miss_sound.play()
             core.wait(.5)
-                
+        #print('Nback_Match: %s, correct: %s' % (trial['nback_match'], trial['correct']))
         # log trial and add to data
         self.writeToLog(json.dumps(trial))
         self.structuredata.append(trial)
@@ -172,22 +172,29 @@ class NBackStructureTask(BaseExp):
                 i+=1
             elif i>0:
                 i-=1
+    
+    def run_graph_practice(self):
+        self.trialnum = 0
+        # start graph learning
+        self.presentTextToWindow('Get Ready!', duration=2)
+        self.clearWindow()
+        acc = []
+        for trial in self.practice_trials:
+            out = self.presentTrial(trial)  
+            acc.append(out['correct'])
+        return np.mean(acc)
                 
     def run_graph_learning(self):
         self.trialnum = 0
         # start graph learning
-        pause_trials = (len(self.trials)/3, len(self.trials)/3*2)
+        pause_trials = [len(self.trials)/4*i for i in range(1,4)]
+        timer_text = "Take a break!\n\nContinue in: \n\n     "
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
         for trial in self.trials:
             self.presentTrial(trial)
             if self.trialnum in pause_trials:
-                self.presentInstruction(
-                        """
-                        Take a break!
-                                        
-                        Press 5 when you are ready to continue
-                        """)
+                self.presentTimer(duration=30, text=timer_text)
         
     def run_task(self, pause_trials = None):
         self.setupWindow()
@@ -209,9 +216,9 @@ class NBackStructureTask(BaseExp):
             In the first part of this study, abstract images
             will be shown one at a time.
             
-            Your task is to indicate whether the image shown is the same
-            as the one shown 2 images before by pressing the 
-            corresponding key:
+            Your task is to indicate whether the image shown is 
+            the same as the one shown 2 images before by pressing 
+            the corresponding key:
             
             %s key: Same as %s before
             %s key: Different than %s before
@@ -254,8 +261,9 @@ class NBackStructureTask(BaseExp):
         # structure learning 
         self.presentInstruction(
             """
-            Finished with familiarization. In the next section, 
-            indicate whether the image is unrotated or rotated.
+            Finished with familiarization. We will now practice responding
+            to the images. Remember, indicate whether the image shown is
+            the same as the one shown 2 images before by pressing:
             
                 %s key: Same as %s before
                 %s key: Different than %s before
@@ -263,15 +271,45 @@ class NBackStructureTask(BaseExp):
             Each image will only come up on the screen for a short 
             amount of time. Please respond as quickly and accurately 
             as possible.
-            
-            There will be two breaks.
-            
-            Press 5 to start.
+
+            Wait for the experimenter
             """ % (self.action_keys[1].title(), 
                     self.trial_params['N'],
                     self.action_keys[0].title(),
                     self.trial_params['N']))
+        practice_over = False
+        practice_repeats = 0
+        while not practice_over:
+            avg_acc = self.run_graph_practice()
+            self.presentTextToWindow('Wait for Experimenter')
+            keys, time = self.waitForKeypress([self.trigger_key, '0'])
+            if keys[0] == self.trigger_key:
+                practice_over = True
+            else:
+                practice_repeats += 1
+                self.practice_trials = gen_nbackstructure_trials(
+                                self.graph, 
+                                self.stim_files, 
+                                self.trial_params['num_practice_trials'], 
+                                exp_stage='practice_structure_learning',
+                                n=self.trial_params['N'],
+                                seed=self.practice_seed+practice_repeats)
         
+        self.presentInstruction(
+            """
+            Done with practice. We will now start the first task which will
+            take roughly 35 minutes. There will be 3 breaks.
+            
+                %s key: Same as %s before
+                %s key: Different than %s before
+            
+            
+            Wait for the experimenter
+            """ % (self.action_keys[1].title(), 
+                    self.trial_params['N'],
+                    self.action_keys[0].title(),
+                    self.trial_params['N']))
+            
         self.run_graph_learning()
         
         # clean up and save

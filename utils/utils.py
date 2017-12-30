@@ -83,8 +83,8 @@ def gen_random_RL_trials(stims, values, repeats=3,  duration=2.5,
     np.random.seed()
     return trials
     
-def gen_structured_RL_trials(stims, values, sets=2, 
-                                 duration=2.5, feedback_duration=1, seed=None):
+def gen_structured_RL_trials(stims, values, sets=2, duration=2.5, 
+                             feedback_duration=1, seed=None):
     if seed:
         np.random.seed(seed)
     if sets == 2:
@@ -122,14 +122,15 @@ def gen_structured_RL_trials(stims, values, sets=2,
     
 def gen_nbackstructure_trials(graph, stims, trial_count=100, duration=1.5, 
                          exp_stage=None, balanced=False,  seed=None,
-                         n=2):
+                         n=2, prop_match=.2, allowance=.02):
     if seed:
         np.random.seed(seed)
-    prop_match = 0
-    while prop_match<.18 or prop_match > .22:
+    emp_prop_match = 0
+    while (emp_prop_match < (prop_match-allowance) or 
+           emp_prop_match > (prop_match+allowance)):
         sequence = gen_sequence(graph, trial_count)
         nback_match = (np.roll(sequence, n)==np.array(sequence))[n:]
-        prop_match = np.mean(nback_match)
+        emp_prop_match = np.mean(nback_match)
     nback_match = np.append([False]*2, nback_match).astype(int)
     trials = []
     for i, stim_i in enumerate(sequence):
