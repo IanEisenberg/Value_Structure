@@ -131,6 +131,9 @@ class NBackStructureTask(BaseExp):
         trial['secondary_responses'] = []
         trial['secondary_rts'] = []
         trial['trialnum'] = self.trialnum
+        # change nback_match to false if the last trial was a pause trial
+        if self.structuredata[-1]['exp_stage'] == 'break':
+            trial['nback_match'] = 0
         correct_choice = self.action_keys[trial['nback_match']]
         # present stimulus and get response
         event.clearEvents()
@@ -197,6 +200,8 @@ class NBackStructureTask(BaseExp):
                 self.presentTimer(duration=30, text=timer_text)
                 self.structuredata.append({'exp_stage': 'break',
                                            'duration': 30})
+                self.presentInstruction("Press 5 to restart")
+                self.presentTextToWindow('Get Ready!', duration=2)
         
     def run_task(self, pause_trials = None):
         self.setupWindow()

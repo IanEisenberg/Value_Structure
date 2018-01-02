@@ -36,11 +36,11 @@ class RLTask(BaseExp):
         
         assert self.sequence_type in ['structured', 'random', 'semistructured']
         if self.sequence_type == 'structured':
-            self.all_trials = gen_structured_RL_trials(stim_files, 
+            self.trials = gen_structured_RL_trials(stim_files, 
                                                        values, 
                                                        **trial_params)
         elif self.sequence_type == 'random':
-            self.all_trials = gen_random_RL_trials(stim_files, 
+            self.trials = gen_random_RL_trials(stim_files, 
                                                    values, 
                                                    **trial_params)           
         # set up static variables
@@ -163,20 +163,23 @@ class RLTask(BaseExp):
         self.clearWindow()
         # use different scripts depending on whether the trials were generated
         # using generate_structured_RL_trials or generate_random_RL_trials
-        pause_trials = (len(self.all_trials)/3, len(self.all_trials)/3*2)
-        for trial in self.all_trials:
+        pause_trials = (len(self.trials)/3, len(self.trials)/3*2)
+        for trial in self.trials:
             self.presentTrial(trial)
             if self.trialnum in pause_trials:
                 self.presentTimer(duration=30, text=timer_text)
                 self.RLdata.append({'exp_stage': 'break',
                                     'duration': 30})
+                self.presentInstruction("Press 5 to restart")
+                self.presentTextToWindow('Get Ready!', duration=2)
             
     def run_task(self, pause_trials = None):
         self.setupWindow()
         self.stim_size = self.getSquareSize(self.win)        
         # instructions
         # introduction
-        text =  \
+        texts = []
+        texts.append( \
             """
   In this task, two images from the last task will 
   be shown on the screen at once, as shown.
@@ -184,33 +187,35 @@ class RLTask(BaseExp):
   You select one image by pressing the 
   correponding arrow key (left or right).\n\n\n\n\n\n\n\n\n\n\n
                   Press 5 to continue...
-            """
-        intro_stim=visual.TextStim(self.win, 
-                                   text=text,
-                                   font='BiauKai',
-                                   height=.07,
-                                   wrapWidth=100,
-                                   pos=(0,.1))
+            """)
         
-        instruction_stims = [self.stim_files[0], self.stim_files[7]]
-        self.draw_stim(instruction_stims, textstim=intro_stim)
-        self.waitForKeypress(self.trigger_key)
+        texts.append( \
+            """
+  Each image has a chance of earning 1 point when you select it.
+  The chance of earning a point is different for each image
+  
+  For example, one image may result in a point 80% of the time,
+  while another image may result in a point 50% of the time.\n\n\n\n\n\n\n\n\n\n\n
+                  Press 5 to continue...
+            """)
+            
+            
+        for text in texts:
+            intro_stim=visual.TextStim(self.win, 
+                                       text=text,
+                                       font='BiauKai',
+                                       height=.07,
+                                       wrapWidth=100,
+                                       pos=(0,.1))
+            
+            instruction_stims = [self.stim_files[0], self.stim_files[7]]
+            self.draw_stim(instruction_stims, textstim=intro_stim)
+            self.waitForKeypress(self.trigger_key)
         
 
         self.presentInstruction(
             """
-            Each image has a chance of earning 1 point when you select it.
             Your goal in this task is to get as many points as possible.
-            
-            The chance of earning a point is different for each image:
-            some images have a higher chance to earn a point than others.
-            
-            For example, one image may result in a point 70% of the time
-            when you click on it, while another image may result in a point
-            50% of the time.
-            
-            If both of those images came up on one trial, you would 
-            want to select the 70% image.
             
             Each trial is short, so please respond quickly while trying 
             to pick the more rewarding shape.

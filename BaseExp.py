@@ -52,7 +52,7 @@ class BaseExp(object):
         return json.dumps(init_dict)
     
     def writeToLog(self,msg):
-        f=open(os.path.join(self.save_dir,'Log',self.logfilename),'a')
+        f = open(os.path.join(self.save_dir,'Log',self.logfilename),'a')
         f.write(msg)
         f.write('\n')
         f.close()
@@ -77,14 +77,14 @@ class BaseExp(object):
                 self.shutDownEarly()
     
     def clearWindow(self):
-            """ clear the main window
-            """
-            if self.text_stim:
-                self.text_stim.setText('')
-                self.win.flip()
-            else:
-                self.presentTextToWindow('')
-                
+        """ clear the main window
+        """
+        if self.text_stim:
+            self.text_stim.setText('')
+            self.win.flip()
+        else:
+            self.presentTextToWindow('')
+            
     def closeWindow(self):
         """ close the main window
         """
@@ -200,6 +200,5 @@ class BaseExp(object):
         self.setupWindow()
         self.stim_size = self.getSquareSize(self.win)
         self.presentInstruction('Welcome! Press 5 to continue...')
-        out = self.waitForKeypress()
-        print(out)
+        self.waitForKeypress()
         

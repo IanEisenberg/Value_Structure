@@ -4,11 +4,11 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import statsmodels.formula.api as smf
-from utils.data_preparation_utils import process_data
+from utils.data_preparation_utils import get_community, process_data
 
 #test code
 
-data = process_data('RA')
+data = process_data('test')
 
 RL = data['RL']
 structure = data['structure']
@@ -18,7 +18,7 @@ descriptive_stats = data['descriptive_stats']
 # *****************************************************************************
 # analyze structure task
 # *****************************************************************************
-m = smf.ols(formula='rt ~ C(rotation) + correct.shift() + community_transition + steps_since_seen',
+m = smf.ols(formula='rt ~ C(nback_match) + correct.shift() + community_transition + steps_since_seen',
             data = structure)
 res = m.fit()
 res.summary()
@@ -44,17 +44,19 @@ sns.pointplot(x='transition_node', y='correct', data=structure, join=False,
 # *****************************************************************************
 # analyze RL task
 # *****************************************************************************
+# descriptive stats
 plt.figure(figsize=(12,8))
 RL.rt.hist(bins=50)
 
-switch_point = np.where(RL.stim_set==True)[0][0]
+# fit models
+switch_points = np.where(RL.stim_set.diff()==1)[0]
 
 # before switch
 models = {}
 basic_m = BasicRLModel(RL)
 SR_m = SR_RLModel(RL, structure)
 for model in [basic_m, SR_m]:
-    model.optimize(stop=switch_point)
+    model.optimize(stop=switch_points[0])
     p, vals = model.run_data()
 models['before_switch'] = {'basic': basic_m,
                            'SR': SR_m}
@@ -62,7 +64,7 @@ models['before_switch'] = {'basic': basic_m,
 basic_m = BasicRLModel(RL)
 SR_m = SR_RLModel(RL, structure)
 for model in [basic_m, SR_m]:
-    model.optimize(start=switch_point, stop=switch_point*2)
+    model.optimize(start=switch_points[0], stop=switch_points[1])
     p, vals = model.run_data()
 models['after_switch'] = {'basic': basic_m,
                            'SR': SR_m}
@@ -70,11 +72,11 @@ models['after_switch'] = {'basic': basic_m,
 for key,vals in models.items():
     print('*'*79)
     if key == 'after_switch':
-        start = switch_point
-        stop = switch_point*2
+        start = switch_points[0]
+        stop = switch_points[1]
     else:
         start = None
-        stop = switch_point
+        stop = switch_points[0]
     print('%s: start %s, stop %s' % (key, start, stop))
     for name, m in vals.items():
         print('%s: ' % name, m.get_log_likelihood(start, stop))

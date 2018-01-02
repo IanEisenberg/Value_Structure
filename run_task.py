@@ -59,7 +59,7 @@ structure = NBackStructureTask(expid='structure',
                           stim_files=stims, 
                           graph=graph, 
                           trial_params=structure_trial_params,
-                          fullscreen=False)
+                          fullscreen=True)
 
 RL_trial_params = {'sets': 5}
 RLtask = RLTask(expid='RL',
@@ -68,8 +68,9 @@ RLtask = RLTask(expid='RL',
                 stim_files=stims,
                 values=values,
                 sequence_type='structured',
-                fullscreen=False)
+                fullscreen=True,
+                trial_params=RL_trial_params)
 
 # start task
-structure.run_task()
+#structure.run_task()
 points = RLtask.run_task()
