@@ -64,7 +64,7 @@ structure = NBackStructureTask(expid='structure',
                           trial_params=structure_trial_params,
                           fullscreen=True)
 
-RL_trial_params = {'sets': 5}
+RL_trial_params = {'sets': 6}
 RLtask = RLTask(expid='RL',
                 subjid=subj,
                 save_dir=save_dir,
