@@ -197,10 +197,12 @@ class NBackStructureTask(BaseExp):
         for trial in self.trials:
             self.presentTrial(trial)
             if self.trialnum in pause_trials:
+                clock = core.Clock()
                 self.presentTimer(duration=30, text=timer_text)
-                self.structuredata.append({'exp_stage': 'break',
-                                           'duration': 30})
                 self.presentInstruction("Press 5 to restart")
+                break_length = clock.getTime()
+                self.structuredata.append({'exp_stage': 'break',
+                                           'duration': break_length})
                 self.presentTextToWindow('Get Ready!', duration=2)
         
     def run_task(self):

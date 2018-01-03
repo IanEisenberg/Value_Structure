@@ -34,7 +34,7 @@ def get_descriptive_stats(RL_df, structure_df):
         stats[name]['avg_rt'] = df.rt.median()
         stats[name]['accuracy'] = df.correct.mean()
     return stats
-    
+
 def post_process_RL(RL_df):
     # scrub data
     RL_df = RL_df.query('exp_stage == "RL_task"')
@@ -53,6 +53,17 @@ def post_process_RL(RL_df):
     for k,v in remapping.items():
         RL_df.stim_set.replace(k, v, inplace=True)
     RL_df.stim_set = RL_df.stim_set.astype(int)
+    # add trials since a stim set switch
+    switch_points = np.where(RL_df.stim_set.diff()==1)[0]
+    trials_since_switch = []
+    count=0
+    for i in range(len(RL_df)):
+        if i in switch_points:
+            count=0
+        trials_since_switch.append(count)
+        count+=1
+    RL_df.loc[:, 'trials_since_switch'] = trials_since_switch
+
     # drop unneeded
     RL_df.drop(['duration', 'feedback_duration', 
                 'secondary_responses', 'secondary_rts'],

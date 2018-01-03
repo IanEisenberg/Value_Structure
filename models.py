@@ -18,21 +18,46 @@ class BasicRLModel(object):
         self.eps=0
         self.lr = .01
         self.verbose=verbose
-            
-    def get_choice_prob(self, trial):
+    
+    def _calc_choice_probs(self, trial):
         stims = trial.stim_indices
-        stim_values = [self.get_value(stim) for stim in stims]
+        stim_values = [self._get_value(stim) for stim in stims]
                        
         # compute softmax decision probs
         f = lambda x: np.e**(self.beta*x)
         softmax_values = [f(v) for v in stim_values]
         normalized = [v/np.sum(softmax_values) for v in softmax_values]
+        return normalized
+    
+    def _get_choice_prob(self, trial):
+        probs = self._calc_choice_probs(trial)
         # get prob of choice
-        choice_prob = normalized[int(trial.response)]
+        choice_prob = probs[int(trial.response)]
         # incorporate eps
         choice_prob = (1-self.eps)*choice_prob + (self.eps)*(1/3)
         return choice_prob
     
+    def _get_value(self, stim):
+        return self.vals[stim]
+    
+    def _reset_vals(self):
+        for k in self.vals:
+            self.vals[k] = self.init_val
+            
+    def _update(self, trial):
+        selected_stim = trial.selected_stim
+        reward = trial.rewarded
+        value = self._get_value(selected_stim)
+        delta = self.lr*(reward-value)
+        self.vals[selected_stim] += delta
+    
+    def _wipe_data(self, data):
+        cols = ['correct', 'response','rewarded', 'rt', 
+                'selected_stim', 'selected_value']
+        for col in cols:
+            if col in data.columns:
+                data.loc[:, col] = np.nan
+        
     def get_log_likelihood(self, start=None, stop=None):
         """ Returns summed negative log likelihood """
         probs, track_vals = self.run_data()
@@ -48,29 +73,35 @@ class BasicRLModel(object):
                 'lr': self.lr,
                 'eps': self.eps}
                 
-    def get_value(self, stim):
-        return self.vals[stim]
-
-    def update(self, trial):
-        selected_stim = trial.selected_stim
-        reward = trial.rewarded
-        value = self.get_value(selected_stim)
-        delta = self.lr*(reward-value)
-        self.vals[selected_stim] += delta
-    
-    def reset_vals(self):
-        for k in self.vals:
-            self.vals[k] = self.init_val
     def run_data(self):
-        self.reset_vals()
+        self._reset_vals()
         probs = []  
         track_vals = []
         for i, trial in self.data.iterrows():
-            probs.append(self.get_choice_prob(trial))
-            self.update(trial)
+            probs.append(self._get_choice_prob(trial))
+            self._update(trial)
             track_vals.append(self.vals.copy())
         return probs, track_vals
     
+    def simulate(self):
+        self._reset_vals()
+        track_vals = []
+        sim_data = self.data.copy()
+        self._wipe_data(sim_data)
+        for i, trial in self.data.iterrows():
+            # make decision
+            probs = self._calc_choice_probs(trial)
+            choice = np.random.choice([0,1], p=probs)
+            sim_data.loc[i,'response'] = choice
+            sim_data.loc[i,'rewarded']  = trial.rewards[choice]
+            sim_data.loc[i,'selected_stim']  = trial.stim_indices[choice]
+            sim_data.loc[i,'selected_value'] = trial.values[choice]
+            sim_data.loc[i,'correct']  = choice==trial.correct_choice
+            # update
+            self._update(sim_data.loc[i])
+            track_vals.append(self.vals.copy())
+        return sim_data, track_vals
+            
     def optimize(self, start=None, stop=None):
         def loss(pars):
             #unpack params
@@ -103,12 +134,7 @@ class GraphRLModel(BasicRLModel):
         self.graph = graph
         self.graph_decay = 0 # if 0, no propagation
     
-    def get_params(self):
-        params = super(GraphRLModel, self).get_params()
-        params['graphydecay'] = self.graph_decay
-        return params
-                
-    def update(self, trial):
+    def _update(self, trial):
         selected_stim = trial.selected_stim
         reward = trial.rewarded
         value = self.vals[selected_stim]
@@ -119,7 +145,12 @@ class GraphRLModel(BasicRLModel):
             value = self.vals[stim]
             delta = self.lr*(reward-value)*self.graph_decay
             self.vals[stim] += delta
-    
+            
+    def get_params(self):
+        params = super(GraphRLModel, self).get_params()
+        params['graphydecay'] = self.graph_decay
+        return params
+                
     def optimize(self, start=None, stop=None):
         def loss(pars):
             #unpack params
@@ -153,12 +184,12 @@ def SR_TD(data, alpha, gamma):
                              'sprime': data.stim_index.shift(-1)}).iloc[:-1].astype(int)
     states = state_df.s.unique()
     M = np.identity(len(states)) # define future-state occupancy matrix
-    def update(s, sprime):
+    def _update(s, sprime):
         base = np.zeros(M.shape[1]); base[s]=1
         delta = base+gamma*M[sprime,:]-M[s,:]
         M[s,:] += alpha*delta
     for i, trial in state_df.iterrows():
-        update(trial.s, trial.sprime)
+        _update(trial.s, trial.sprime)
     return M
 
 def SR_from_transition(transitions, gamma):
@@ -179,7 +210,10 @@ class SR_RLModel(BasicRLModel):
         self.SR_lr = .05
         self.gamma = .99
         self.M = self.SR_TD()
-        
+    
+    def _get_value(self, stim):
+        return self.M[stim,:].dot(self.vals.values())
+    
     def get_M(self):
         return self.M
         
@@ -188,9 +222,6 @@ class SR_RLModel(BasicRLModel):
         params['SR_lr'] = self.SR_lr
         params['gamma'] = self.gamma
         return params
-    
-    def get_value(self, stim):
-        return self.M[stim,:].dot(self.vals.values())
         
     def optimize(self, start=None, stop=None):
         def loss(pars):
@@ -229,12 +260,12 @@ class SR_RLModel(BasicRLModel):
                                  'sprime': self.structure.stim_index.shift(-1)}).iloc[:-1].astype(int)
         states = state_df.s.unique()
         M = np.identity(len(states)) # define future-state occupancy matrix
-        def update(s, sprime):
+        def _update(s, sprime):
             base = np.zeros(M.shape[1]); base[s]=1
             delta = base+self.gamma*M[sprime,:]-M[s,:]
             M[s,:] += self.SR_lr*delta
         for i, trial in state_df.iterrows():
-            update(trial.s, trial.sprime)
+            _update(trial.s, trial.sprime)
         return M
 
 

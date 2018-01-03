@@ -97,7 +97,7 @@ class BaseExp(object):
             return square_size
                 
     def presentInstruction(self, text, size=.07):
-            self.presentTextToWindow(text, size = size)
+            self.presentTextToWindow(text, size=size)
             resp,time=self.waitForKeypress(self.trigger_key)
             self.checkRespForQuitKey(resp)
             event.clearEvents()
