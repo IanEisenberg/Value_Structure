@@ -83,7 +83,7 @@ def gen_random_RL_trials(stims, values, repeats=3,  duration=2.5,
     np.random.seed()
     return trials
     
-def gen_structured_RL_trials(stims, values, sets=2, duration=2.5, 
+def gen_structured_RL_trials(stims, values, sets=5, duration=2.5, 
                              feedback_duration=1, seed=None):
     if seed:
         np.random.seed(seed)
@@ -92,7 +92,7 @@ def gen_structured_RL_trials(stims, values, sets=2, duration=2.5,
         stim_rollout = [[1,2,6,7,11,12], 
                         [3,4,5,8,9,10,13,14]]
     elif sets == 5:
-        repeats = 12
+        repeats = 16
         stim_rollout = [[1,6,11],
                         [2,7,12],
                         [3,8,13],
