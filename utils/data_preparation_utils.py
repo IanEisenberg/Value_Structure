@@ -6,7 +6,7 @@ import pickle
 # get path of file
 d = path.dirname(__file__)
 
-def load_data(subj):
+def load_data(subj, post=True):
     RL_file, structure_file = sorted(glob(path.join(d, '../Data/RawData','*%s*' % subj)))
     assert 'RL' in RL_file
     #unpickle
@@ -21,8 +21,9 @@ def load_data(subj):
     # get descriptive stats
     descriptive_stats = get_descriptive_stats(RL_df, structure_df)
     # modify dataframes
-    RL_df = post_process_RL(RL_df)
-    structure_df = post_process_structure(structure_df)
+    if post == True:
+        RL_df = post_process_RL(RL_df)
+        structure_df = post_process_structure(structure_df)
     return RL_df, structure_df, metadata, descriptive_stats
 
 def get_descriptive_stats(RL_df, structure_df):
@@ -96,8 +97,8 @@ def post_process_structure(structure_df):
     structure_df = structure_df.reindex_axis(sorted(structure_df.columns), axis=1)
     return structure_df
 
-def process_data(subj):
-    RL_df, structure_df, metadata, descriptive_stats = load_data(subj)
+def process_data(subj, post=True):
+    RL_df, structure_df, metadata, descriptive_stats = load_data(subj, post)
     data = {'RL': RL_df,
             'structure': structure_df,
             'meta': metadata,
