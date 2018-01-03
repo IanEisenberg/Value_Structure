@@ -40,9 +40,12 @@ np.random.shuffle(stims)
 # create value graph
 
 np.random.seed(2222)
-seeds = {2:.9, 1:1, 6:.1,7:.01}
-values = create_value_graph(graph, seeds, weight=.98, steps = 3000,
-                            scaling=.85, offset=.05)
+seeds = {1:1, 7:0}
+values = create_value_graph(graph, seeds, weight=.97, steps = 3000,
+                            scaling=.6, offset=.2)
+# hardwire the connector nodes to all have the same value
+for k in [0,14,4,5,9,10]:
+    values[k] = .5
 
 np.random.seed()
 

@@ -203,7 +203,7 @@ class NBackStructureTask(BaseExp):
                 self.presentInstruction("Press 5 to restart")
                 self.presentTextToWindow('Get Ready!', duration=2)
         
-    def run_task(self, pause_trials = None):
+    def run_task(self):
         self.setupWindow()
         self.stim_size = self.getSquareSize(self.win)
         self.startTime = core.getTime()

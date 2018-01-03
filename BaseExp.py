@@ -197,7 +197,7 @@ class BaseExp(object):
             self.clearWindow()
         return keys, core.getTime()
         
-    def runTask(self, pause_trials = None):
+    def runTask(self):
         self.setupWindow()
         self.stim_size = self.getSquareSize(self.win)
         self.presentInstruction('Welcome! Press 5 to continue...')
