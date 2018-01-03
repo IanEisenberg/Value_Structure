@@ -175,7 +175,7 @@ class BaseExp(object):
         self.closeWindow()
         sys.exit()
             
-    def waitForKeypress(self,keyList=[]):
+    def waitForKeypress(self,keyList=[], clear=True):
         """ wait for a keypress and return the pressed key
         - this is primarily for waiting to start a task
         - use getResponse to get responses on a task
@@ -193,7 +193,8 @@ class BaseExp(object):
             for k,response_time in keys:
                 start = True
                 self.checkRespForQuitKey(k)
-        self.clearWindow()
+        if clear==True:
+            self.clearWindow()
         return keys, core.getTime()
         
     def runTask(self, pause_trials = None):

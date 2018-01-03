@@ -210,8 +210,7 @@ class RLTask(BaseExp):
             
             instruction_stims = [self.stim_files[0], self.stim_files[7]]
             self.draw_stim(instruction_stims, textstim=intro_stim)
-            self.waitForKeypress(self.trigger_key)
-        
+            self.waitForKeypress(self.trigger_key, clear=False)
 
         self.presentInstruction(
             """

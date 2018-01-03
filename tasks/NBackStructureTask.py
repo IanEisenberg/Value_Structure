@@ -132,7 +132,7 @@ class NBackStructureTask(BaseExp):
         trial['secondary_rts'] = []
         trial['trialnum'] = self.trialnum
         # change nback_match to false if the last trial was a pause trial
-        if self.structuredata[-1]['exp_stage'] == 'break':
+        if len(self.structuredata)>0 and self.structuredata[-1]['exp_stage'] == 'break':
             trial['nback_match'] = 0
         correct_choice = self.action_keys[trial['nback_match']]
         # present stimulus and get response
