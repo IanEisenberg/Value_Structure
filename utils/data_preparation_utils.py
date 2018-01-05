@@ -48,6 +48,9 @@ def post_process_RL(RL_df):
     
     RL_df.insert(0, 'selected_stim', stim_choices)
     RL_df.insert(0, 'selected_value', value_choices)
+    # add community column
+    community = RL_df.stim_index.apply(get_community)
+    RL_df.insert(0, 'community', community)
     # convert stim set to categorical label
     RL_df.stim_set = RL_df.stim_set.astype(str)
     remapping = {k: str(v) for v,k in enumerate(RL_df.stim_set.unique())}
@@ -64,7 +67,8 @@ def post_process_RL(RL_df):
         trials_since_switch.append(count)
         count+=1
     RL_df.loc[:, 'trials_since_switch'] = trials_since_switch
-
+    # convert column types
+    RL_df.correct = RL_df.correct.astype(float)
     # drop unneeded
     RL_df.drop(['duration', 'feedback_duration', 
                 'secondary_responses', 'secondary_rts'],
@@ -101,7 +105,8 @@ def post_process_structure(structure_df):
         last_seen[stim] = i
         steps_since_seen.append(steps_since)
     structure_df.loc[:,'steps_since_seen'] = steps_since_seen 
-        
+    # convert column types
+    structure_df.correct = structure_df.correct.astype(float)
     # drop unneeded
     structure_df.drop(['duration', 'secondary_responses', 'secondary_rts'],
                 axis=1,

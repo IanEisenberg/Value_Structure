@@ -9,7 +9,7 @@ from utils.data_preparation_utils import get_community, process_data
 
 #test code
 
-data = process_data('651')
+data = process_data('608')
 
 RL = data['RL']
 structure = data['structure']
@@ -47,8 +47,13 @@ sns.pointplot(x='transition_node', y='correct', data=structure, join=False,
 # *****************************************************************************
 # descriptive stats
 plt.figure(figsize=(12,8))
-RL.rt.hist(bins=50)
-
+plt.subplot(1,2,2)
+sns.pointplot(x='stim_set', y='correct', 
+              data=RL.query('display_reward==0 and stim_set<3'),
+              join=False,
+              hue='stim_set',
+              scale=1,
+              err_width=3)
 
 RL.correct = RL.correct.astype(int)
 m = smf.glm(formula='correct ~ trials_since_switch * stim_set', data=RL.query('stim_set<4'), family=sm.families.Binomial())

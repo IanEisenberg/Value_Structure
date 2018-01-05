@@ -42,7 +42,7 @@ np.random.shuffle(stims)
 np.random.seed(2222)
 seeds = {1:1, 7:0}
 values = create_value_graph(graph, seeds, weight=.97, steps = 3000,
-                            scaling=.6, offset=.2)
+                            scaling=.8, offset=.1)
 # hardwire the connector nodes to all have the same value
 for k in [0,14,4,5,9,10]:
     values[k] = .5
