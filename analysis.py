@@ -78,7 +78,7 @@ res = m.fit()
 res.summary()
 
 # fit models
-switch_points = np.where(RL.stim_set.diff()==1)[0]
+switch_points = np.where(RL.stim_set_cat.diff()==1)[0]
 # total
 # before switch
 models = {}
@@ -89,34 +89,4 @@ for model in [basic_m, SR_m]:
     p, vals = model.run_data()
 models['all'] = {'basic': basic_m,
                   'SR': SR_m}
-
-# before switch
-basic_m = BasicRLModel(RL)
-SR_m = SR_RLModel(RL, structure)
-for model in [basic_m, SR_m]:
-    model.optimize(stop=switch_points[0])
-    p, vals = model.run_data()
-models['before_switch'] = {'basic': basic_m,
-                           'SR': SR_m}
-# after switch
-basic_m = BasicRLModel(RL)
-SR_m = SR_RLModel(RL, structure)
-for model in [basic_m, SR_m]:
-    model.optimize(start=switch_points[0], stop=None)
-    p, vals = model.run_data()
-models['after_switch'] = {'basic': basic_m,
-                           'SR': SR_m}
-
-for key,vals in models.items():
-    print('*'*79)
-    if key == 'after_switch':
-        start = switch_points[0]
-        stop = switch_points[1]
-    else:
-        start = None
-        stop = switch_points[0]
-    print('%s: start %s, stop %s' % (key, start, stop))
-    for name, m in vals.items():
-        print('%s: ' % name, m.get_log_likelihood(start, stop))
-
 
