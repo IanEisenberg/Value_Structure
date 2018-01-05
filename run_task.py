@@ -75,5 +75,5 @@ RLtask = RLTask(expid='RL',
                 trial_params=RL_trial_params)
 
 # start task
-#structure.run_task()
+structure.run_task()
 points = RLtask.run_task()
