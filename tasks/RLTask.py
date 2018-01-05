@@ -113,6 +113,7 @@ class RLTask(BaseExp):
         """
         trialClock = core.Clock()
         self.trialnum += 1
+        trial['correct'] = np.nan
         trial['rewarded'] = np.nan
         trial['onset']=core.getTime() - self.startTime
         trial['response'] = np.nan
@@ -136,16 +137,20 @@ class RLTask(BaseExp):
             trial['secondary_responses']=[i[0] for i in keys[1:]]
             trial['secondary_rts']=[i[1] for i in keys[1:]]
             trial['rewarded'] = trial['rewards'][choice]
-            trial['correct'] = trial['correct_choice'] == choice
+            if np.isnan(trial['correct_choice']) == False:
+                trial['correct'] = trial['correct_choice'] == choice
             self.pointtracker += trial['rewarded']
             if trial['correct']:
                 self.correct_tracker += 1
             else:
                 self.correct_tracker = 0
-            if trial['rewarded']:
-                self.presentTextToWindow('+1 point', color=[0,1,0])
+            if trial['display_reward']:
+                if trial['rewarded']:
+                    self.presentTextToWindow('+1 point', color=[0,1,0])
+                else:
+                    self.presentTextToWindow('+0 points', color=[1,0,0])
             else:
-                self.presentTextToWindow('+0 points', color=[1,0,0])
+                self.presentTextToWindow('Points Hidden!', color=[1,0,0])
         else:
             self.presentTextToWindow('Please Respond Faster', color=[1,1,1])
         core.wait(trial['feedback_duration'])
@@ -215,6 +220,11 @@ class RLTask(BaseExp):
         self.presentInstruction(
             """
             Your goal in this task is to get as many points as possible.
+            
+            After you select an image, most of the time you will be told
+            whether you won a point or not. Occasionally the points will
+            be hidden. Even when they are hidden they count towards
+            your total! 
             
             Each trial is short, so please respond quickly while trying 
             to pick the more rewarding shape.

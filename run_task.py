@@ -46,7 +46,6 @@ values = create_value_graph(graph, seeds, weight=.97, steps = 3000,
 # hardwire the connector nodes to all have the same value
 for k in [0,14,4,5,9,10]:
     values[k] = .5
-
 np.random.seed()
 
 
@@ -64,7 +63,8 @@ structure = NBackStructureTask(expid='structure',
                           trial_params=structure_trial_params,
                           fullscreen=True)
 
-RL_trial_params = {'sets': 6}
+RL_trial_params = {'sets': 6,
+                   'reward_blackout': 10}
 RLtask = RLTask(expid='RL',
                 subjid=subj,
                 save_dir=save_dir,
@@ -75,5 +75,5 @@ RLtask = RLTask(expid='RL',
                 trial_params=RL_trial_params)
 
 # start task
-structure.run_task()
+#structure.run_task()
 points = RLtask.run_task()

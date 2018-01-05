@@ -84,35 +84,59 @@ def gen_random_RL_trials(stims, values, repeats=3,  duration=2.5,
     return trials
     
 def gen_structured_RL_trials(stims, values, sets=6, duration=2.5, 
-                             feedback_duration=1, seed=None):
+                             feedback_duration=1, reward_blackout=0,
+                             repeats=None, seed=None):
+    """ Generates a sequence of trials fot eh RL task
+    Args:
+        stims: list of stim files
+        values: values for each stim
+        sets: number of stim sets to display
+        duration: duration of stimulus
+        feedback_duration: duration of feedback
+        reward_blackout: number of trials after switch where reward is hidden
+            If reward_blackout=0 rewards are always displayed
+        seed: random seed
+    """
     if seed:
         np.random.seed(seed)
     if sets == 2:
-        repeats = 6
-        stim_rollout = [[1,2,6,7,11,12], 
-                        [3,4,5,8,9,10,13,14]]
+        if repeats is None:
+            repeats = 6
+        stim_rollout = [(1,2,6,7,11,12), 
+                        (3,4,5,8,9,10,13,14)]
     elif sets == 6:
-        repeats = 16
-        stim_rollout = [[1,6,11],
-                        [2,7,12],
-                        [3,8,13],
-                        [4,5],
-                        [9,10],
-                        [0,14]]
+        if repeats is None:
+            repeats = 20
+        stim_rollout = [(1,6,11),
+                        (2,7,12),
+                        (3,8,13),
+                        (4,5),
+                        (9,10),
+                        (0,14)]
     
     trials = []
     for available_stims in stim_rollout:
         # get trials per condition
         permutes = list(permutations(available_stims,2)) * repeats
         np.random.shuffle(permutes)
-        for stim1, stim2 in permutes:
-            stim_values =  [values[stim1], values[stim2]]
-            rewards = [int(r.random() < v) for v in stim_values]
+        for i, (stim1, stim2) in enumerate(permutes):
+            # determine whether reward should be displayed
+            display_reward = 1
+            if i < reward_blackout:
+                display_reward = 0
+            # calculate reward and values
+            stim_values =  (values[stim1], values[stim2])
+            rewards = tuple((int(r.random() < v) for v in stim_values))
+            if stim_values[1] == stim_values[0]:
+                correct_choice = np.nan
+            else:
+                correct_choice = int(stim_values[1] > stim_values[0])
             trial = {'stim_indices': [stim1, stim2],
                      'stim_files': [stims[stim1], stims[stim2]],
                      'rewards': rewards,
+                     'display_reward': display_reward,
                      'values': stim_values,
-                     'correct_choice': int(stim_values[1] > stim_values[0]),
+                     'correct_choice': correct_choice,
                      'duration': duration,
                      'feedback_duration': feedback_duration,
                      'stim_set': available_stims,
