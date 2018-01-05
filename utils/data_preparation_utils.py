@@ -49,24 +49,26 @@ def post_process_RL(RL_df):
     RL_df.insert(0, 'selected_stim', stim_choices)
     RL_df.insert(0, 'selected_value', value_choices)
     # add community column
-    community = RL_df.stim_index.apply(get_community)
-    RL_df.insert(0, 'community', community)
-    # convert stim set to categorical label
-    RL_df.stim_set = RL_df.stim_set.astype(str)
-    remapping = {k: str(v) for v,k in enumerate(RL_df.stim_set.unique())}
-    for k,v in remapping.items():
-        RL_df.stim_set.replace(k, v, inplace=True)
-    RL_df.stim_set = RL_df.stim_set.astype(int)
+    community = RL_df.selected_stim.apply(get_community) 
+    RL_df.insert(0, 'selected_community', community)
+    
     # add trials since a stim set switch
-    switch_points = np.where(RL_df.stim_set.diff()==1)[0]
+    curr = RL_df.stim_set[0]
     trials_since_switch = []
     count=0
-    for i in range(len(RL_df)):
-        if i in switch_points:
+    for i in RL_df.stim_set:
+        if i != curr:
             count=0
+            curr = i
         trials_since_switch.append(count)
         count+=1
     RL_df.loc[:, 'trials_since_switch'] = trials_since_switch
+    # add categorical stim_set column
+    mapping = {k:v for v,k in enumerate(RL_df.stim_set.unique())}
+    stim_set_cat = []
+    for s in RL_df.stim_set:
+        stim_set_cat.append(mapping[s])
+    RL_df.insert(0, 'stim_set_cat', stim_set_cat)
     # convert column types
     RL_df.correct = RL_df.correct.astype(float)
     # drop unneeded

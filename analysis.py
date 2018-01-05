@@ -45,18 +45,35 @@ sns.pointplot(x='transition_node', y='correct', data=structure, join=False,
 # *****************************************************************************
 # analyze RL task
 # *****************************************************************************
+# set up auxilary dataframes
+probe_trials = RL.stim_set.apply(lambda x: len(x) < 3)
+correct_community = (RL.selected_community == 
+                     RL.stim_indices.apply(lambda x: np.max(get_community(x))))
+correct_community = pd.concat([correct_community, RL.loc[:,['stim_set', 'stim_set_cat']]], axis=1)
+correct_community = correct_community[probe_trials]
+correct_community.columns = ['correct', 'stim_set','stim_set_cat']
+
 # descriptive stats
-plt.figure(figsize=(12,8))
-plt.subplot(1,2,2)
+plt.figure(figsize=(24,8))
+plt.subplot(1,2,1)
 sns.pointplot(x='stim_set', y='correct', 
-              data=RL.query('display_reward==0 and stim_set<3'),
+              data=correct_community,
+              hue='stim_set_cat',
               join=False,
-              hue='stim_set',
               scale=1,
               err_width=3)
+plt.title('Choices Between Identically Valued Stim')
+plt.subplot(1,2,2)
+sns.pointplot(x='stim_set', y='correct', 
+              data=RL[~probe_trials].query('display_reward==0'),
+              hue='stim_set_cat',
+              join=False,
+              scale=1,
+              err_width=3)
+plt.title('Choices during Blackout')
 
-RL.correct = RL.correct.astype(int)
-m = smf.glm(formula='correct ~ trials_since_switch * stim_set', data=RL.query('stim_set<4'), family=sm.families.Binomial())
+# evaluate whether performance went up over time
+m = smf.glm(formula='correct ~ trials_since_switch', data=RL[~probe_trials], family=sm.families.Binomial())
 res = m.fit()
 res.summary()
 
