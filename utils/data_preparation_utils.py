@@ -5,6 +5,7 @@ import pandas as pd
 import pickle
 # get path of file
 d = path.dirname(__file__)
+pd.options.mode.chained_assignment = None 
 
 def load_data(subj, post=True):
     RL_file, structure_file = sorted(glob(path.join(d, '../Data/RawData','*%s*' % subj)))
@@ -69,7 +70,7 @@ def post_process_RL(RL_df):
                 'secondary_responses', 'secondary_rts'],
                 axis=1,
                 inplace=True)
-    RL_df = RL_df.reindex_axis(sorted(RL_df.columns), axis=1)
+    RL_df = RL_df.reindex(sorted(RL_df.columns), axis=1)
     return RL_df
 
 def post_process_structure(structure_df):
@@ -105,7 +106,7 @@ def post_process_structure(structure_df):
     structure_df.drop(['duration', 'secondary_responses', 'secondary_rts'],
                 axis=1,
                 inplace=True)
-    structure_df = structure_df.reindex_axis(sorted(structure_df.columns), axis=1)
+    structure_df = structure_df.reindex(sorted(structure_df.columns), axis=1)
     return structure_df
 
 def process_data(subj, post=True):

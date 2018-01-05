@@ -98,11 +98,3 @@ for key,vals in models.items():
         print('%s: ' % name, m.get_log_likelihood(start, stop))
 
 
-# drive M from one step transition probabilities
-from utils.graph_utils import graph_to_matrix
-from models import SR_from_transition
-graph = meta['structure']['graph']
-onestep = graph_to_matrix(graph)/5.0
-TrueM = SR_from_transition(onestep, SR_m.gamma)
-M = SR_m.get_M()
-np.corrcoef(M.flatten(),TrueM.flatten())

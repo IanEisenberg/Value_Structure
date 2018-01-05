@@ -13,14 +13,13 @@ class BasicRLModel(object):
         self.vals = odict({i: self.init_val for i in self.stims})
         
         # set up class vars
-        self.decay = 0
         self.beta=1
         self.eps=0
         self.lr = .01
         self.verbose=verbose
     
     def _calc_choice_probs(self, trial):
-        stims = trial.stim_indices
+        stims = trial['stim_indices']
         stim_values = [self._get_value(stim) for stim in stims]
                        
         # compute softmax decision probs
@@ -32,7 +31,7 @@ class BasicRLModel(object):
     def _get_choice_prob(self, trial):
         probs = self._calc_choice_probs(trial)
         # get prob of choice
-        choice_prob = probs[int(trial.response)]
+        choice_prob = probs[int(trial['response'])]
         # incorporate eps
         choice_prob = (1-self.eps)*choice_prob + (self.eps)*(1/3)
         return choice_prob
@@ -45,9 +44,9 @@ class BasicRLModel(object):
             self.vals[k] = self.init_val
             
     def _update(self, trial):
-        selected_stim = trial.selected_stim
-        reward = trial.rewarded
-        value = self._get_value(selected_stim)
+        selected_stim = trial['selected_stim']
+        reward = trial['rewarded']
+        value = self._get_value(int(selected_stim))
         delta = self.lr*(reward-value)
         self.vals[selected_stim] += delta
     
@@ -73,6 +72,9 @@ class BasicRLModel(object):
                 'lr': self.lr,
                 'eps': self.eps}
                 
+    def update_params(self, params):
+        self.__dict__.update(params)
+        
     def run_data(self):
         self._reset_vals()
         probs = []  
@@ -83,24 +85,37 @@ class BasicRLModel(object):
             track_vals.append(self.vals.copy())
         return probs, track_vals
     
-    def simulate(self):
+    def simulate(self, prob_match=True, data=None):
+        if data is None:
+            data = self.data
         self._reset_vals()
-        track_vals = []
-        sim_data = self.data.copy()
-        self._wipe_data(sim_data)
-        for i, trial in self.data.iterrows():
+        sim_data = []
+        for i, trial in data.iterrows():
+            trial = trial.to_dict()
             # make decision
             probs = self._calc_choice_probs(trial)
-            choice = np.random.choice([0,1], p=probs)
-            sim_data.loc[i,'response'] = choice
-            sim_data.loc[i,'rewarded']  = trial.rewards[choice]
-            sim_data.loc[i,'selected_stim']  = trial.stim_indices[choice]
-            sim_data.loc[i,'selected_value'] = trial.values[choice]
-            sim_data.loc[i,'correct']  = choice==trial.correct_choice
+            if prob_match:
+                choice = np.random.choice([0,1], p=probs)
+            else:
+                choice = np.argmax(probs)
+            trial['response_prob'] = probs[choice]
+            trial['response'] = choice
+            trial['rewarded'] = trial['rewards'][choice]
+            trial['selected_stim']  = trial['stim_indices'][choice]
+            trial['selected_value'] = trial['values'][choice]
+            if np.isnan(trial['correct_choice']) == False:
+                trial['correct']  = choice==trial['correct_choice']
+            else:
+                trial['correct'] = np.nan
+            sim_data.append(trial)
             # update
-            self._update(sim_data.loc[i])
-            track_vals.append(self.vals.copy())
-        return sim_data, track_vals
+            if trial['display_reward']:
+                self._update(trial)
+        # change type of columns
+        sim_data = pd.DataFrame(sim_data)
+        sim_data.selected_stim = sim_data.selected_stim.astype(int)
+        sim_data.correct = sim_data.correct.astype(float)
+        return sim_data
             
     def optimize(self, start=None, stop=None):
         def loss(pars):
@@ -113,7 +128,7 @@ class BasicRLModel(object):
         
         def track_loss(params, iter, resid):
             if iter%100==0:
-                print(iter, resid)
+                print(iter, resid, params)
             
         params = Parameters()
         params.add('beta', value=1, min=.01, max=100)
@@ -126,49 +141,26 @@ class BasicRLModel(object):
             fitter = Minimizer(loss, params, iter_cb=track_loss)
         fitter.scalar_minimize(method='Nelder-Mead', options={'xatol': 1e-3,
                                                               'maxiter': 200})
-
-class GraphRLModel(BasicRLModel):
-    """ Extends basic RL Model with value propagation one edge in graph """
-    def __init__(self, data, graph, verbose=False):
-        super(GraphRLModel, self).__init__(data, verbose)
-        self.graph = graph
-        self.graph_decay = 0 # if 0, no propagation
-    
-    def _update(self, trial):
-        selected_stim = trial.selected_stim
-        reward = trial.rewarded
-        value = self.vals[selected_stim]
-        delta = self.lr*(reward-value)
-        self.vals[selected_stim] += delta
-        # value propagation
-        for stim in self.graph[selected_stim]:
-            value = self.vals[stim]
-            delta = self.lr*(reward-value)*self.graph_decay
-            self.vals[stim] += delta
-            
-    def get_params(self):
-        params = super(GraphRLModel, self).get_params()
-        params['graphydecay'] = self.graph_decay
-        return params
-                
-    def optimize(self, start=None, stop=None):
+        
+    def optimize_acc(self, data=None):
         def loss(pars):
             #unpack params
             parvals = pars.valuesdict()
             self.beta = parvals['beta']
-            self.eps = parvals['eps']
-            self.graph_decay = parvals['graph_decay']
             self.lr = parvals['lr']
-            return self.get_log_likelihood(start, stop)
+            self.eps = parvals['eps']
+            sim_data = self.simulate(data=data, prob_match=True)
+            # get probability of correct response
+            prob_correct = abs((1-sim_data.correct)-sim_data.response_prob)
+            return -np.sum(np.log(prob_correct))
         
         def track_loss(params, iter, resid):
             if iter%100==0:
-                print(iter, resid)
+                print(iter, resid, params)
             
         params = Parameters()
         params.add('beta', value=1, min=.01, max=100)
         params.add('eps', value=0, min=0, max=1)
-        params.add('graph_decay', value=0, min=0, max=1)
         params.add('lr', value=.1, min=.000001, max=1)
         
         if self.verbose==False:
@@ -177,20 +169,6 @@ class GraphRLModel(BasicRLModel):
             fitter = Minimizer(loss, params, iter_cb=track_loss)
         fitter.scalar_minimize(method='Nelder-Mead', options={'xatol': 1e-3,
                                                               'maxiter': 200})
-        
-        
-def SR_TD(data, alpha, gamma):
-    state_df = pd.DataFrame({'s': data.stim_index,
-                             'sprime': data.stim_index.shift(-1)}).iloc[:-1].astype(int)
-    states = state_df.s.unique()
-    M = np.identity(len(states)) # define future-state occupancy matrix
-    def _update(s, sprime):
-        base = np.zeros(M.shape[1]); base[s]=1
-        delta = base+gamma*M[sprime,:]-M[s,:]
-        M[s,:] += alpha*delta
-    for i, trial in state_df.iterrows():
-        _update(trial.s, trial.sprime)
-    return M
 
 def SR_from_transition(transitions, gamma):
     """ Computes successor representation from one-step transition matrix """
@@ -212,7 +190,7 @@ class SR_RLModel(BasicRLModel):
         self.M = self.SR_TD()
     
     def _get_value(self, stim):
-        return self.M[stim,:].dot(self.vals.values())
+        return self.M[stim,:].dot(self.vals.values())/np.sum(self.M[stim,:])
     
     def get_M(self):
         return self.M
@@ -255,6 +233,46 @@ class SR_RLModel(BasicRLModel):
         fitter.scalar_minimize(method='Nelder-Mead', options={'xatol': 1e-3,
                                                               'maxiter': 200})
         
+    def optimize_acc(self, data=None):
+        def loss(pars):
+            #unpack params
+            parvals = pars.valuesdict()
+            # base RL params
+            self.beta = parvals['beta']
+            self.eps = parvals['eps']
+            self.lr = parvals['lr']
+            # SR params
+            self.gamma = parvals['gamma']
+            self.SR_lr = parvals['SR_lr']
+            self.M = self.SR_TD()
+            sim_data = self.simulate(data=data, prob_match=True)
+            prob_correct = abs((1-sim_data.correct)-sim_data.response_prob)
+            return -np.sum(np.log(prob_correct))
+        
+        def track_loss(params, iter, resid):
+            if iter%100==0:
+                print(iter, resid)
+            
+        params = Parameters()
+        params.add('beta', value=1, min=.01, max=100)
+        params.add('eps', value=0, min=0, max=1)
+        params.add('lr', value=.1, min=.000001, max=1)
+        params.add('gamma', value=1, min=0, max=1)
+        params.add('SR_lr', value=.05, min=0, max=1)
+        
+        if self.verbose==False:
+            fitter = Minimizer(loss, params)
+        else:
+            fitter = Minimizer(loss, params, iter_cb=track_loss)
+        fitter.scalar_minimize(method='Nelder-Mead', options={'xatol': 1e-3,
+                                                              'maxiter': 200})
+        
+    
+    def simulate(self, prob_match=True, data=None):
+        self.M = self.SR_TD()
+        sim_data = super(SR_RLModel, self).simulate(prob_match, data)
+        return sim_data
+        
     def SR_TD(self):
         state_df = pd.DataFrame({'s': self.structure.stim_index,
                                  'sprime': self.structure.stim_index.shift(-1)}).iloc[:-1].astype(int)
@@ -265,20 +283,58 @@ class SR_RLModel(BasicRLModel):
             delta = base+self.gamma*M[sprime,:]-M[s,:]
             M[s,:] += self.SR_lr*delta
         for i, trial in state_df.iterrows():
-            _update(trial.s, trial.sprime)
+            _update(trial['s'], trial['sprime'])
         return M
 
-
-
-
-
-
-
-
-
-
-
-
-
+class GraphRLModel(BasicRLModel):
+    """ Extends basic RL Model with value propagation one edge in graph """
+    def __init__(self, data, graph, verbose=False):
+        super(GraphRLModel, self).__init__(data, verbose)
+        self.graph = graph
+        self.graph_decay = 0 # if 0, no propagation
+    
+    def _update(self, trial):
+        selected_stim = trial['selected_stim']
+        reward = trial['rewarded']
+        value = self.vals[selected_stim]
+        delta = self.lr*(reward-value)
+        self.vals[selected_stim] += delta
+        # value propagation
+        for stim in self.graph[selected_stim]:
+            value = self.vals[stim]
+            delta = self.lr*(reward-value)*self.graph_decay
+            self.vals[stim] += delta
+            
+    def get_params(self):
+        params = super(GraphRLModel, self).get_params()
+        params['graphydecay'] = self.graph_decay
+        return params
+                
+    def optimize(self, start=None, stop=None):
+        def loss(pars):
+            #unpack params
+            parvals = pars.valuesdict()
+            self.beta = parvals['beta']
+            self.eps = parvals['eps']
+            self.graph_decay = parvals['graph_decay']
+            self.lr = parvals['lr']
+            return self.get_log_likelihood(start, stop)
+        
+        def track_loss(params, iter, resid):
+            if iter%100==0:
+                print(iter, resid)
+            
+        params = Parameters()
+        params.add('beta', value=1, min=.01, max=100)
+        params.add('eps', value=0, min=0, max=1)
+        params.add('graph_decay', value=0, min=0, max=1)
+        params.add('lr', value=.1, min=.000001, max=1)
+        
+        if self.verbose==False:
+            fitter = Minimizer(loss, params)
+        else:
+            fitter = Minimizer(loss, params, iter_cb=track_loss)
+        fitter.scalar_minimize(method='Nelder-Mead', options={'xatol': 1e-3,
+                                                              'maxiter': 200})
 
 
