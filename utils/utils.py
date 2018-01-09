@@ -170,7 +170,7 @@ def gen_nbackstructure_trials(graph, stims, trial_count=100, duration=1.5,
     
 def gen_rotstructure_trials(graph, stims, trial_count=100, duration=1.5, 
                          exp_stage=None, balanced=False,  seed=None,
-                         proportion_rotated=.2):
+                         proportion_rotated=.15):
     if seed:
         np.random.seed(seed)
     if not balanced:

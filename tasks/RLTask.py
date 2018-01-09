@@ -52,7 +52,8 @@ class RLTask(BaseExp):
     # ******* Display Functions **************
     #**************************************************************************
     
-    def draw_stim(self, stim_files, other_stim=None, textstim=None):
+    def draw_stims(self, stim_files, other_stim=None, textstim=None):
+        assert len(stim_files)==2
         size = self.stim_size
         positions = [(-.3,0), (.3,0)]
         stim1 = visual.ImageStim(self.win, 
@@ -75,7 +76,7 @@ class RLTask(BaseExp):
     def presentStim(self, stim_files, textstim=None, duration=None):
         # present stim
         positions = [(-.3,0), (.3,0)]
-        self.draw_stim(stim_files, textstim)
+        self.draw_stims(stim_files, textstim)
         # get response
         recorded_keys = []
         stim_clock = core.Clock()
@@ -92,7 +93,7 @@ class RLTask(BaseExp):
                                                  lineWidth=10,
                                                  pos=positions[choice],
                                                  edges=96)
-                        self.draw_stim(stim_files, 
+                        self.draw_stims(stim_files, 
                                        other_stim=choice_box)
                     recorded_keys+=keys
         else:
@@ -214,7 +215,7 @@ class RLTask(BaseExp):
                                        pos=(0,.1))
             
             instruction_stims = [self.stim_files[0], self.stim_files[7]]
-            self.draw_stim(instruction_stims, textstim=intro_stim)
+            self.draw_stims(instruction_stims, textstim=intro_stim)
             self.waitForKeypress(self.trigger_key, clear=False)
 
         self.presentInstruction(

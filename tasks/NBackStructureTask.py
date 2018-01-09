@@ -229,31 +229,24 @@ class NBackStructureTask(BaseExp):
             the same as the one shown 2 images before by pressing 
             the corresponding key:
             
-            %s key: Same as %s before
-            %s key: Different than %s before
+            If the image is the same as %s before press the %s.
+            If the image is different, press the %s.
             
             You will hear a beep if you choose incorrectly 
             or miss a response.
             
-            Press 5 to [blank]
+            Press 5 to hear the error beep
             """
             
-        self.presentInstruction(intro_text.replace('[blank]',
-                                                   'hear the error beep') 
-                                    % (self.action_keys[1].title(), 
-                                        self.trial_params['N'],
-                                        self.action_keys[0].title(),
-                                        self.trial_params['N']))
+        self.presentInstruction(intro_text % 
+                                    (self.trial_params['N'],
+                                    (self.action_keys[0].title() + ' key').upper(),
+                                    (self.action_keys[1].title() + ' key').upper()))
         
         # show beeps
         error_sound.play()
         
-        self.presentInstruction(intro_text.replace('[blank]', 
-                                                   'hear the miss beep') 
-                                    % (self.action_keys[1].title(), 
-                                        self.trial_params['N'],
-                                        self.action_keys[0].title(),
-                                        self.trial_params['N']))
+        self.presentInstruction("Press 5 to hear the miss beep")
         miss_sound.play(); core.wait(.5)
         
         self.presentInstruction(
