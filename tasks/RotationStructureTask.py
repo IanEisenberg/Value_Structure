@@ -16,6 +16,7 @@ from psychopy import prefs
 prefs.general['audioLib'] = ['sounddevice']
 from psychopy import visual, core, event, sound
 from random import sample
+from utils.utils import gen_rotstructure_trials
 
 # play a sound at beginning to ensure that psychopy's sound is working
 error_sound = sound.Sound(secs=.1,value=500)
@@ -26,8 +27,12 @@ class RotationStructureTask(BaseExp):
     """
     
     def __init__(self, expid, subjid, save_dir, stim_files, graph, 
-                 trials, familiarization_trials, 
-                 fullscreen = False):
+                 trial_params = {}, fullscreen = False):
+        # set up default trial params
+        self.trial_params = {'num_trials': 1400,
+                             'proportion_rotated': .15,
+                             'seed': None}
+                             
         # set up "holder" variables
         self.structuredata = []  
         self.pointtracker = 0
@@ -35,23 +40,48 @@ class RotationStructureTask(BaseExp):
         self.startTime = []
         
         # set up argument variables
-        self.familiarization_trials = familiarization_trials
         self.graph = graph
         self.stim_files = stim_files
-        self.trials = trials
+        self.trials = gen_rotstructure_trials(
+                               self.graph, 
+                               self.stim_files, 
+                               self.trial_params['num_trials'], 
+                               exp_stage='structure_learning',
+                               proportion_rotated=self.trial_params['proportion_rotated'],
+                               seed=self.trial_params['seed'])
+
         
         # set up static variables
         self.action_keys = ['z','m']
         np.random.shuffle(self.action_keys)
-        self.n_value_ratings = 3
-        self.test_familiarization = True
         # init Base Exp
         super(RotationStructureTask, self).__init__(expid, subjid, save_dir, fullscreen)
             
     #**************************************************************************
     # ******* Display Functions **************
     #**************************************************************************
+    def draw_familiarization_stims(self, stim_file):
+        rot_flip = np.random.randint(0,2)
+        correct_key = ['left', 'right'][rot_flip]
 
+        size = self.stim_size
+        positions = [(-.3,0), (.3,0)]
+        stim1 = visual.ImageStim(self.win, 
+                                image=stim_file,
+                                units='norm',
+                                pos=positions[0],
+                                size=size if not rot_flip else size[::-1],
+                                ori=rot_flip*90)
+        stim2 = visual.ImageStim(self.win, 
+                                image=stim_file,
+                                units='norm',
+                                pos=positions[1],
+                                size=size if rot_flip else size[::-1],
+                                ori=(1-rot_flip)*90)
+        stim1.draw(); stim2.draw()
+        self.win.flip()
+        return correct_key
+        
     def presentStim(self, stim_file, rotation, allowed_keys=None, textstim=None, 
                     duration=None, correct_choice=None):
         if allowed_keys is None:
@@ -155,15 +185,18 @@ class RotationStructureTask(BaseExp):
                 i-=1
                 
     def run_familiarization_test(self):
-        np.random.shuffle(self.familiarization_trials)
-        # ensure some rotation
-        N = len(self.familiarization_trials)
-        rotation = np.zeros(N)
-        rotation[:int(N*.2)] = 90
-        np.random.shuffle(rotation)
-        for i, trial in enumerate(self.familiarization_trials):
-            trial['rotation'] = rotation[i]
-            self.presentTrial(trial)
+        stims = self.stim_files[:]*3
+        while stims:
+            stim = stims.pop(0)
+            correct_key = self.draw_familiarization_stims(stim)
+            keys = self.waitForKeypress(['left','right'])
+            key = keys[0][0][0]
+            print(key,correct_key, key==correct_key)
+            if key != correct_key:
+                print('error')
+                stims.append(stim)
+                error_sound.play()
+            core.wait(.5)
                             
     def run_graph_learning(self):
         self.trialnum = 0
@@ -202,87 +235,56 @@ class RotationStructureTask(BaseExp):
             will be shown one at a time for a short amount of time.
             
             Your task is to indicate whether 
-            each stimulus is rotated or unrotated.
+            each image is rotated or unrotated.
             
-            %s key: Unrotated
-            %s key: Rotated
+            If UNROTATED, press the %s. 
+            If the image is ROTATED press the %s
             
             You will hear a beep if you choose incorrectly 
             or miss a response.
             
-            Press 5 to [blank]
+            Press 5 to hear the error sound
             """
             
-        self.presentInstruction(intro_text.replace('[blank]',
-                                                   'hear the error beep') 
-                                    % (self.action_keys[0].title(), 
-                                       self.action_keys[1].title()))
+        self.presentInstruction(intro_text % 
+                                ((self.action_keys[0] + ' key').upper(), 
+                                (self.action_keys[1] + ' key').upper()))
         
         # show beeps
         error_sound.play()
         
-        self.presentInstruction(intro_text.replace('[blank]', 
-                                                   'hear the miss beep') 
-                                    % (self.action_keys[0].title(), 
-                                       self.action_keys[1].title()))
+        self.presentInstruction("Press 5 to hear the 'miss' sound")
         miss_sound.play(); core.wait(.5)
         
         self.presentInstruction(
             """
-            We will start by familiarizing you with the 
-            images. Each of these images is unrotated.
+            Before beginning the 1st task, you will get some practice 
+            seeing each image when it IS NOT rotated as well as how it 
+            looks when it IS rotated. 
+            
+            First, we will show you each of the 15 images in their normal 
+            non-rotated positions. Your job is simply to look at each image
+            to become familiar with it.
             
             Press the left and right keys to move through the images.
             
-            Press 5 to continue...
+            Press 5 to continue
             """)
         self.run_familiarization()
         
         
-        if self.test_familiarization == True:
-            learned=False
-            num_misses = 0
-            self.presentInstruction(
-                """
-                We will now practice responding to the images. 
-                Indicate whether the stimulus is unrotated or rotated.
-                
-                        %s key: Unrotated
-                        %s key: Rotated
-                        
-                Wait for the experimenter.
-                """ % (self.action_keys[0].title(), 
-                       self.action_keys[1].title()))
-            while not learned:     
-                self.run_familiarization_test()
-                acc = np.mean([t['correct'] for t in self.structuredata 
-                               if t['exp_stage'] == 'familiarization_test'])
-                if acc>.8 or num_misses>6:
-                    learned=True
-                else:
-                    num_misses += 1
-                    if num_misses==4:
-                        self.presentInstruction(
-                            """
-                            Seems you could use a refresher! Please look over the
-                            images again and try to remember which way the stimulus
-                            is unrotated
-                            
-                            Press left and right keys to move through the images
-                            
-                            Press 5 to continue...
-                            """)
-                        self.run_familiarization()
-                        self.presentInstruction(
-                            """
-                            We will now practice responding to the images again.
-                            
-                                %s key: Unrotated
-                                %s key: Rotated
-                                
-                            Press 5 to continue...
-                            """ % (self.action_keys[0].title(), 
-                                   self.action_keys[1].title()))
+        self.presentInstruction(
+            """
+            Now, we will show you each image next to its rotated version. 
+            Your job is to pick out which of the two images IS NOT rotated 
+            by pressing the LEFT and RIGHT keys​ on your keyboard, 
+            to indicate whether the left or right image IS NOT rotated.
+
+            Wait for the experimenter
+            """)
+        
+        self.run_familiarization_test()
+
                 
         # structure learning 
         self.presentInstruction(
