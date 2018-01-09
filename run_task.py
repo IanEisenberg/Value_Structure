@@ -2,6 +2,7 @@ import numpy as np
 import os
 from tasks.RLTask import RLTask
 from tasks.NBackStructureTask import NBackStructureTask
+from tasks.RotationStructureTask import RotationStructureTask
 from utils.utils import create_value_graph
 
 
@@ -10,6 +11,7 @@ from utils.utils import create_value_graph
 print('Enter the subject ID')
 subj = raw_input('subject id: ')
 save_dir = os.path.join('Data')
+structure_task = 'nback'
 n_structure_trials = 1400
 n_structure_practice_trials = 60
 
@@ -48,21 +50,36 @@ for k in [0,14,4,5,9,10]:
     values[k] = .5
 np.random.seed()
 
+# Set up Structure Task
+if structure_task == 'rotation':
+    # set up task
+    structure_trial_params = {'num_trials': n_structure_trials,
+                              'proportion_rotated': .15,
+                              'seed': 10101}
+    
+    structure = RotationStructureTask(expid='structure',
+                              subjid=subj, 
+                              save_dir=save_dir, 
+                              stim_files=stims, 
+                              graph=graph, 
+                              trial_params=structure_trial_params,
+                              fullscreen=True)
+elif structure_task == 'nback':
+    # set up task
+    structure_trial_params = {'N': 2,
+                              'num_trials': n_structure_trials,
+                              'num_practice_trials': n_structure_practice_trials,
+                              'seed': 10101}
+    
+    structure = NBackStructureTask(expid='structure',
+                              subjid=subj, 
+                              save_dir=save_dir, 
+                              stim_files=stims, 
+                              graph=graph, 
+                              trial_params=structure_trial_params,
+                              fullscreen=True)
 
-# set up task
-structure_trial_params = {'N': 2,
-                          'num_trials': n_structure_trials,
-                          'num_practice_trials': n_structure_practice_trials,
-                          'seed': 10101}
-
-structure = NBackStructureTask(expid='structure',
-                          subjid=subj, 
-                          save_dir=save_dir, 
-                          stim_files=stims, 
-                          graph=graph, 
-                          trial_params=structure_trial_params,
-                          fullscreen=True)
-
+# Set up RL task
 RL_trial_params = {'sets': 6,
                    'reward_blackout': 10}
 RLtask = RLTask(expid='RL',
