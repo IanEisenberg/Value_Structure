@@ -42,6 +42,7 @@ class RotationStructureTask(BaseExp):
         # set up argument variables
         self.graph = graph
         self.stim_files = stim_files
+        self.trial_params.update(trial_params)
         self.trials = gen_rotstructure_trials(
                                self.graph, 
                                self.stim_files, 
@@ -214,7 +215,7 @@ class RotationStructureTask(BaseExp):
             if self.trialnum in pause_trials:
                 clock = core.Clock()
                 self.presentTimer(duration=30, text=timer_text)
-                self.presentInstruction("Press 5 to restart")
+                self.presentInstruction("Press 5 to continue5")
                 break_length = clock.getTime()
                 self.structuredata.append({'exp_stage': 'break',
                                            'duration': break_length})

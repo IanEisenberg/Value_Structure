@@ -176,7 +176,7 @@ class RLTask(BaseExp):
                 self.presentTimer(duration=30, text=timer_text)
                 self.RLdata.append({'exp_stage': 'break',
                                     'duration': 30})
-                self.presentInstruction("Press 5 to restart")
+                self.presentInstruction("Press 5 to continue")
                 self.presentTextToWindow('Get Ready!', duration=2)
             
     def run_task(self, pause_trials = None):

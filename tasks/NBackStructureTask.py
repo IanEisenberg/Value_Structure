@@ -199,7 +199,7 @@ class NBackStructureTask(BaseExp):
             if self.trialnum in pause_trials:
                 clock = core.Clock()
                 self.presentTimer(duration=30, text=timer_text)
-                self.presentInstruction("Press 5 to restart")
+                self.presentInstruction("Press 5 to continue")
                 break_length = clock.getTime()
                 self.structuredata.append({'exp_stage': 'break',
                                            'duration': break_length})
