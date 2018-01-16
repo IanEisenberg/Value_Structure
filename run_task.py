@@ -11,7 +11,7 @@ from utils.utils import create_value_graph
 print('Enter the subject ID')
 subj = raw_input('subject id: ')
 save_dir = os.path.join('Data')
-structure_task = 'nback'
+structure_task = 'rotation'
 n_structure_trials = 1400
 n_structure_practice_trials = 60
 

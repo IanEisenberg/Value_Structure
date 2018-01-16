@@ -185,7 +185,11 @@ class RotationStructureTask(BaseExp):
                 i-=1
                 
     def run_familiarization_test(self):
-        stims = self.stim_files[:]*3
+        stims = []
+        for i in range(4):
+            tmp = self.stim_files[:]
+            np.random.shuffle(tmp)
+            stims.extend(tmp)
         while stims:
             stim = stims.pop(0)
             correct_key = self.draw_familiarization_stims(stim)
@@ -201,18 +205,20 @@ class RotationStructureTask(BaseExp):
     def run_graph_learning(self):
         self.trialnum = 0
         # start graph learning
-        pause_trials = (len(self.trials)/3, len(self.trials)/3*2)
+        pause_trials = [len(self.trials)//4*i for i in range(1,4)]
+        timer_text = "Take a break!\n\nContinue in: \n\n       "
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
         for trial in self.trials:
             self.presentTrial(trial)
             if self.trialnum in pause_trials:
-                self.presentInstruction(
-                        """
-                        Take a break!
-                                        
-                        Press 5 when you are ready to continue
-                        """)
+                clock = core.Clock()
+                self.presentTimer(duration=30, text=timer_text)
+                self.presentInstruction("Press 5 to restart")
+                break_length = clock.getTime()
+                self.structuredata.append({'exp_stage': 'break',
+                                           'duration': break_length})
+                self.presentTextToWindow('Get Ready!', duration=2)
         
     def run_task(self, pause_trials = None):
         self.setupWindow()
@@ -237,18 +243,13 @@ class RotationStructureTask(BaseExp):
             Your task is to indicate whether 
             each image is rotated or unrotated.
             
-            If UNROTATED, press the %s. 
-            If the image is ROTATED press the %s
-            
             You will hear a beep if you choose incorrectly 
             or miss a response.
             
             Press 5 to hear the error sound
             """
             
-        self.presentInstruction(intro_text % 
-                                ((self.action_keys[0] + ' key').upper(), 
-                                (self.action_keys[1] + ' key').upper()))
+        self.presentInstruction(intro_text)
         
         # show beeps
         error_sound.play()
@@ -259,11 +260,11 @@ class RotationStructureTask(BaseExp):
         self.presentInstruction(
             """
             Before beginning the 1st task, you will get some practice 
-            seeing each image when it IS NOT rotated as well as how it 
+            seeing each image when it is UNROTATED as well as how it 
             looks when it IS rotated. 
             
             First, we will show you each of the 15 images in their normal 
-            non-rotated positions. Your job is simply to look at each image
+            unrotated positions. Your job is simply to look at each image
             to become familiar with it.
             
             Press the left and right keys to move through the images.
@@ -275,10 +276,11 @@ class RotationStructureTask(BaseExp):
         
         self.presentInstruction(
             """
-            Now, we will show you each image next to its rotated version. 
+            Now we will show you each image next to its rotated version. 
             Your job is to pick out which of the two images IS NOT rotated 
-            by pressing the LEFT and RIGHT keys​ on your keyboard, 
-            to indicate whether the left or right image IS NOT rotated.
+            by pressing the LEFT and RIGHT keys on your keyboard.
+            
+            Press the direction where the image is UNROTATED.
 
             Wait for the experimenter
             """)
@@ -292,17 +294,18 @@ class RotationStructureTask(BaseExp):
             Finished with familiarization. In the next section, 
             indicate whether the image is unrotated or rotated.
             
-                %s key: Unrotated
-                %s key: Rotated
+            If UNROTATED, press the %s. 
+            If the image is ROTATED press the %s
             
             Each image will only come up on the screen for a short 
             amount of time. Please respond as quickly and accurately 
             as possible.
             
-            There will be two breaks.
+            There will be three breaks.
             
             Wait for the experimenter
-            """ % (self.action_keys[0].title(), self.action_keys[1].title()))
+            """  % ((self.action_keys[0] + ' key').upper(), 
+                    (self.action_keys[1] + ' key').upper()))
         
         self.run_graph_learning()
         
