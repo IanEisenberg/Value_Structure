@@ -92,9 +92,10 @@ def post_process_structure(structure_df):
     structure_df.insert(0, 'community', community)
     structure_df.insert(0, 'community_transition',
                         structure_df.community.diff()!=0)
+    structure_df.loc[0, 'community_transition'] = np.nan
     # add transition columns
-    transition_node = structure_df.stim_index.apply(lambda x: x in [0,4,5,9,10,14])
-    structure_df.insert(0, 'transition_node', transition_node)
+    bridge_node = structure_df.stim_index.apply(lambda x: x in [0,4,5,9,10,14])
+    structure_df.insert(0, 'bridge_node', bridge_node)
     # trials since last seen
     steps_since_seen = []
     last_seen = {}

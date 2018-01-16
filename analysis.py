@@ -29,18 +29,18 @@ sns.set_context('poster')
 sns.set_palette("Set1", 8, .75)
 plt.figure(figsize=(24,16))
 plt.subplot(2,2,1)
-sns.boxplot(x='stim_index', y='rt', hue='transition_node', data=structure)
+sns.boxplot(x='stim_index', y='rt', hue='bridge_node', data=structure)
 
 plt.subplot(2,2,2)
 sns.pointplot(x='stim_index', y='correct', data=structure,   join=False, 
-              hue='transition_node', scale=1, errwidth=3)
+              hue='bridge_node', scale=1, errwidth=3)
 # average across stim
 plt.subplot(2,2,3)
-sns.boxplot(x='transition_node', y='rt', data=structure)
+sns.boxplot(x='community_transition', y='rt', data=structure)
 
 plt.subplot(2,2,4)
-sns.pointplot(x='transition_node', y='correct', data=structure, join=False, 
-              hue='transition_node', scale=1, errwidth=3)
+sns.pointplot(x='community_transition', y='correct', data=structure, join=False, 
+              hue='community_transition', scale=1, errwidth=3)
 
 # *****************************************************************************
 # analyze RL task
