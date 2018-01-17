@@ -9,7 +9,7 @@ from utils.data_preparation_utils import get_community, process_data
 
 #test code
 
-data = process_data('608')
+data = process_data('502', overwrite=True)
 
 RL = data['RL']
 structure = data['structure']
@@ -19,7 +19,11 @@ descriptive_stats = data['descriptive_stats']
 # *****************************************************************************
 # analyze structure task
 # *****************************************************************************
-m = smf.ols(formula='rt ~ C(nback_match) + correct.shift() + community_transition + steps_since_seen',
+if 'nback_match' in structure.columns:
+    m = smf.ols(formula='rt ~ C(nback_match) + correct.shift() + community_transition + steps_since_seen',
+                data = structure)
+else:
+    m = smf.ols(formula='rt ~ C(rotation) + correct.shift() + community_transition + steps_since_seen',
             data = structure)
 res = m.fit()
 res.summary()
@@ -32,7 +36,7 @@ plt.subplot(2,2,1)
 sns.boxplot(x='stim_index', y='rt', hue='bridge_node', data=structure)
 
 plt.subplot(2,2,2)
-sns.pointplot(x='stim_index', y='correct', data=structure,   join=False, 
+sns.pointplot(x='stim_index', y='correct', data=structure, join=False, 
               hue='bridge_node', scale=1, errwidth=3)
 # average across stim
 plt.subplot(2,2,3)

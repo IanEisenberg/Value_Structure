@@ -53,7 +53,7 @@ def post_process_RL(RL_df):
     RL_df.insert(0, 'selected_community', community)
     
     # add trials since a stim set switch
-    curr = RL_df.stim_set[0]
+    curr = RL_df.stim_set.iloc[0]
     trials_since_switch = []
     count=0
     for i in RL_df.stim_set:
@@ -64,7 +64,11 @@ def post_process_RL(RL_df):
         count+=1
     RL_df.loc[:, 'trials_since_switch'] = trials_since_switch
     # add categorical stim_set column
-    mapping = {k:v for v,k in enumerate(RL_df.stim_set.unique())}
+    try:
+        mapping = {k:v for v,k in enumerate(RL_df.stim_set.unique())}
+    except TypeError:
+        RL_df.stim_set = RL_df.stim_set.apply(lambda x: tuple(x))
+        mapping = {k:v for v,k in enumerate(RL_df.stim_set.unique())}
     stim_set_cat = []
     for s in RL_df.stim_set:
         stim_set_cat.append(mapping[s])
@@ -117,14 +121,18 @@ def post_process_structure(structure_df):
     structure_df = structure_df.reindex(sorted(structure_df.columns), axis=1)
     return structure_df
 
-def process_data(subj, post=True):
-    RL_df, structure_df, metadata, descriptive_stats = load_data(subj, post)
-    data = {'RL': RL_df,
-            'structure': structure_df,
-            'meta': metadata,
-            'descriptive_stats': descriptive_stats}
-    pickle.dump(data, open(path.join(d,'../Data/ProcessedData', 
-                                     '%s_processed_data.pkl' % subj),'wb'))
+def process_data(subj, overwrite=False):
+    processed_file = path.join(d,'../Data/ProcessedData', 
+                                     '%s_processed_data.pkl' % subj)
+    if not overwrite and path.exists(processed_file):
+        data = pickle.load(open(processed_file,'rb'))
+    else:
+        RL_df, structure_df, metadata, descriptive_stats = load_data(subj)
+        data = {'RL': RL_df,
+                'structure': structure_df,
+                'meta': metadata,
+                'descriptive_stats': descriptive_stats}
+        pickle.dump(data, open(processed_file,'wb'))
     return data
     
 # helper functions
