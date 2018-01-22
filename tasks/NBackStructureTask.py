@@ -66,6 +66,7 @@ class NBackStructureTask(BaseExp):
 
 
         # set up static variables
+        self.num_breaks = 3
         self.action_keys = ['z','m']
         np.random.shuffle(self.action_keys)
         self.n_value_ratings = 3
@@ -190,7 +191,7 @@ class NBackStructureTask(BaseExp):
     def run_graph_learning(self):
         self.trialnum = 0
         # start graph learning
-        pause_trials = [len(self.trials)//4*i for i in range(1,4)]
+        pause_trials = [len(self.trials)//self.num_breaks*i for i in range(1,self.num_breaks)]
         timer_text = "Take a break!\n\nContinue in: \n\n       "
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
@@ -300,14 +301,15 @@ class NBackStructureTask(BaseExp):
         self.presentInstruction(
             """
             Done with practice. We will now start the first task which will
-            take roughly 35 minutes. There will be 3 breaks.
+            take roughly 35 minutes. There will be %s breaks.
             
                 %s key: Same as %s before
                 %s key: Different than %s before
             
             
             Wait for the experimenter
-            """ % (self.action_keys[1].title(), 
+            """ % (self.num_breaks,
+                    self.action_keys[1].title(), 
                     self.trial_params['N'],
                     self.action_keys[0].title(),
                     self.trial_params['N']))
