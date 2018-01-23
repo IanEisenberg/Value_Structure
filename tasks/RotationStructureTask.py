@@ -166,7 +166,6 @@ class RotationStructureTask(BaseExp):
                 trial['correct']=False
         else:
             miss_sound.play()
-            core.wait(.5)
                 
         # log trial and add to data
         self.writeToLog(json.dumps(trial))
@@ -229,9 +228,9 @@ class RotationStructureTask(BaseExp):
             """
             Welcome! 
             
-            This experiment has two parts. 
+            This experiment has three parts. 
             
-            Each part will last around 30 minutes.
+            This first part will take about 35 minutes.
             
             Press 5 to continue...
             """)

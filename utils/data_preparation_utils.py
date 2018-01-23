@@ -3,6 +3,8 @@ import numpy as np
 from os import path
 import pandas as pd
 import pickle
+from utils.utils import get_community
+
 # get path of file
 d = path.dirname(__file__)
 pd.options.mode.chained_assignment = None 
@@ -135,15 +137,4 @@ def process_data(subj, overwrite=False):
         pickle.dump(data, open(processed_file,'wb'))
     return data
     
-# helper functions
-def get_community(indices):
-    communities = [[0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14]]
-    if type(indices) == list:
-        community_labels = []
-        for index in indices:
-            community_labels.append([i for i, comm in enumerate(communities) if index in comm][0])
-        return community_labels
-        
-    else:
-        return [i for i, comm in enumerate(communities) if indices in comm][0]
-            
+

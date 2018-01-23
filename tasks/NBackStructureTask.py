@@ -159,7 +159,6 @@ class NBackStructureTask(BaseExp):
                 trial['correct']=False
         else:
             miss_sound.play()
-            core.wait(.5)
         #print('Nback_Match: %s, correct: %s' % (trial['nback_match'], trial['correct']))
         # log trial and add to data
         self.writeToLog(json.dumps(trial))
@@ -214,9 +213,9 @@ class NBackStructureTask(BaseExp):
             """
             Welcome! 
             
-            This experiment has two parts. 
+            This experiment has three parts. 
             
-            Each part will last around 30 minutes.
+            This first part will take about 35 minutes.
             
             Press 5 to continue...
             """)

@@ -2,6 +2,7 @@ import numpy as np
 import os
 from tasks.RLTask import RLTask
 from tasks.NBackStructureTask import NBackStructureTask
+from tasks.ParsingTask import ParsingTask
 from tasks.RotationStructureTask import RotationStructureTask
 from utils.utils import create_value_graph
 
@@ -14,6 +15,7 @@ save_dir = os.path.join('Data')
 structure_task = 'nback'
 n_structure_trials = 1400
 n_structure_practice_trials = 60
+n_parse_trials = 600
 
 
 
@@ -91,6 +93,18 @@ RLtask = RLTask(expid='RL',
                 fullscreen=True,
                 trial_params=RL_trial_params)
 
+# Set up parse task
+parse_trial_params = {'num_trials': n_parse_trials,
+                     'seed': 10101}
+parse = ParsingTask(expid='parse',
+                    subjid=subj,
+                    save_dir=save_dir,
+                    stim_files=stims,
+                    graph=graph,
+                    fullscreen=True,
+                    trial_params=parse_trial_params)
+
 # start task
 structure.run_task()
 points = RLtask.run_task()
+parse = Parse.run_task()

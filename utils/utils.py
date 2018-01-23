@@ -58,6 +58,48 @@ def gen_balanced_sequence(graph, repetitions):
     np.random.shuffle(sequence)
     return sequence
 
+def gen_parsing_trials(graph, stims, n_steps=600, duration=1.5, seed=None):
+    assert n_steps%15==0
+    if seed:
+        np.random.seed(seed)
+    blocks = n_steps//15
+    curr_i = np.random.choice(graph.keys())
+    block_types = ['hamiltonian','random','hamiltonian_reversed','random']
+    sequence = []
+    for b in range(blocks):
+        block_type = block_types[b%4]
+        if block_type == 'hamiltonian':
+            hamiltonian = [((curr_i+i)%15, block_type) for i in range(15)]
+            sequence.extend(hamiltonian)
+        elif block_type == 'hamiltonian_reversed':
+            hamiltonian = [((curr_i-i)%15, block_type) for i in range(15)]
+            sequence.extend(hamiltonian)
+        else:
+            for _ in range(15):
+                sequence.append((curr_i, block_type))
+                curr_i = np.random.choice(graph[curr_i])
+    
+    last_comm = None
+    trials = []
+    for i, (stim_i, walk_type) in enumerate(sequence[0:15]):
+        comm = get_community(stim_i)
+        if last_comm is not None and comm!=last_comm:
+            transition=True
+        else:
+            transition=False
+        trial = {'stim_index': stim_i,
+                 'stim_file': stims[stim_i],
+                 'walk_type': walk_type,
+                 'community_transition': transition,
+                 'duration': duration,
+                 'exp_stage': 'parse'}
+        last_comm = comm
+        trials.append(trial)
+    np.random.seed()
+    return trials
+        
+    
+    
 def gen_random_RL_trials(stims, values, repeats=3,  duration=2.5, 
                          feedback_duration=1, seed=None):
     if seed:
@@ -194,6 +236,19 @@ def gen_rotstructure_trials(graph, stims, trial_count=100, duration=1.5,
         trials.append(trial)
     np.random.seed()
     return trials
+
+# helper functions
+def get_community(indices):
+    communities = [[0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14]]
+    if type(indices) == list:
+        community_labels = []
+        for index in indices:
+            community_labels.append([i for i, comm in enumerate(communities) if index in comm][0])
+        return community_labels
+        
+    else:
+        return [i for i, comm in enumerate(communities) if indices in comm][0]
+            
     
 def list_get(lst, elem, default=-1):
         try:
