@@ -1,3 +1,8 @@
+# initialize pygame mixer to remove sound latency
+import pygame
+pygame.mixer.pre_init(22100, -16, 2, 64)
+pygame.mixer.init()
+
 import numpy as np
 import os
 from tasks.RLTask import RLTask
@@ -6,10 +11,6 @@ from tasks.ParsingTask import ParsingTask
 from tasks.RotationStructureTask import RotationStructureTask
 from utils.utils import create_value_graph
 
-# initialize pygame mixer to remove sound latency
-import pygame
-pygame.mixer.pre_init(44100, -16, 2, 64)
-pygame.mixer.init()
 
 # ************Experiment Setup********************************
 # subject parameters

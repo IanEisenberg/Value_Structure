@@ -10,7 +10,6 @@ Created on Wed Jul 19 08:56:52 2017
 generic task using psychopy
 """
 from BaseExp import BaseExp
-import json
 import numpy as np
 from psychopy import prefs
 prefs.general['audioLib'] = ['sounddevice']
@@ -142,7 +141,7 @@ class ParsingTask(BaseExp):
 
         #print('Nback_Match: %s, correct: %s' % (trial['nback_match'], trial['correct']))
         # log trial and add to data
-        self.writeToLog(json.dumps(trial))
+        self.writeToLog(trial)
         self.parsedata.append(trial)
         return trial
                 
