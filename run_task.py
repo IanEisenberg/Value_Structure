@@ -6,6 +6,10 @@ from tasks.ParsingTask import ParsingTask
 from tasks.RotationStructureTask import RotationStructureTask
 from utils.utils import create_value_graph
 
+# initialize pygame mixer to remove sound latency
+import pygame
+pygame.mixer.pre_init(44100, -16, 2, 64)
+pygame.mixer.init()
 
 # ************Experiment Setup********************************
 # subject parameters
@@ -16,7 +20,7 @@ structure_task = 'nback'
 n_structure_trials = 1400
 n_structure_practice_trials = 60
 n_parse_trials = 600
-
+fullscreen=False
 
 
 # set up and shuffle stims
@@ -65,7 +69,7 @@ if structure_task == 'rotation':
                               stim_files=stims, 
                               graph=graph, 
                               trial_params=structure_trial_params,
-                              fullscreen=True)
+                              fullscreen=fullscreen)
 elif structure_task == 'nback':
     # set up task
     structure_trial_params = {'N': 2,
@@ -79,7 +83,7 @@ elif structure_task == 'nback':
                               stim_files=stims, 
                               graph=graph, 
                               trial_params=structure_trial_params,
-                              fullscreen=True)
+                              fullscreen=fullscreen)
 
 # Set up RL task
 RL_trial_params = {'sets': 6,
@@ -90,7 +94,7 @@ RLtask = RLTask(expid='RL',
                 stim_files=stims,
                 values=values,
                 sequence_type='structured',
-                fullscreen=True,
+                fullscreen=fullscreen,
                 trial_params=RL_trial_params)
 
 # Set up parse task
@@ -101,7 +105,7 @@ parse = ParsingTask(expid='parse',
                     save_dir=save_dir,
                     stim_files=stims,
                     graph=graph,
-                    fullscreen=True,
+                    fullscreen=fullscreen,
                     trial_params=parse_trial_params)
 
 # start task

@@ -157,7 +157,7 @@ class RLTask(BaseExp):
         core.wait(trial['feedback_duration'])
         self.clearWindow()    
         # log trial and add to data
-        self.writeToLog(json.dumps(trial))
+        self.writeToLog(trial)
         self.RLdata.append(trial)
         return trial
                  

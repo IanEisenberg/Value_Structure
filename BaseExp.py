@@ -51,9 +51,12 @@ class BaseExp(object):
             raise TypeError
         return json.dumps(init_dict, default=default)
     
-    def writeToLog(self,msg):
+    def writeToLog(self,trial):
+        def default(o):
+            if isinstance(o, np.int64): return int(o)  
+            raise TypeError
         f = open(os.path.join(self.save_dir,'Log',self.logfilename),'a')
-        f.write(msg)
+        f.write(json.dumps(trial, default=default))
         f.write('\n')
         f.close()
          

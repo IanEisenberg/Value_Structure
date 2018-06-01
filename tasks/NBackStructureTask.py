@@ -13,7 +13,7 @@ from BaseExp import BaseExp
 import json
 import numpy as np
 from psychopy import prefs
-prefs.general['audioLib'] = ['sounddevice']
+prefs.general['audioLib'] = ['pygame'] # sounddevoce
 from psychopy import visual, core, event, sound
 from random import sample
 from utils.utils import gen_nbackstructure_trials
@@ -161,7 +161,7 @@ class NBackStructureTask(BaseExp):
             miss_sound.play()
         #print('Nback_Match: %s, correct: %s' % (trial['nback_match'], trial['correct']))
         # log trial and add to data
-        self.writeToLog(json.dumps(trial))
+        self.writeToLog(trial)
         self.structuredata.append(trial)
         return trial
                 
