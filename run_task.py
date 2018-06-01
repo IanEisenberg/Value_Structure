@@ -10,7 +10,7 @@ from utils.utils import create_value_graph
 # ************Experiment Setup********************************
 # subject parameters
 print('Enter the subject ID')
-subj = raw_input('subject id: ')
+subj = input('subject id: ')
 save_dir = os.path.join('Data')
 structure_task = 'nback'
 n_structure_trials = 1400
@@ -107,4 +107,4 @@ parse = ParsingTask(expid='parse',
 # start task
 structure.run_task()
 points = RLtask.run_task()
-parse = Parse.run_task()
+parse = parse.run_task()

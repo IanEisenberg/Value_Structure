@@ -1,4 +1,4 @@
-import cPickle
+import pickle
 import datetime
 import json
 import numpy as np
@@ -44,9 +44,12 @@ class BaseExp(object):
     
     def toJSON(self, excluded_keys=[]):
         """ log the initial conditions for the task """
-        init_dict = {k:self.__dict__[k] for k in self.__dict__.iterkeys() if k 
+        init_dict = {k:self.__dict__[k] for k in self.__dict__.keys() if k 
                     not in excluded_keys}
-        return json.dumps(init_dict)
+        def default(o):
+            if isinstance(o, np.int64): return int(o)  
+            raise TypeError
+        return json.dumps(init_dict, default=default)
     
     def writeToLog(self,msg):
         f = open(os.path.join(self.save_dir,'Log',self.logfilename),'a')
@@ -67,7 +70,7 @@ class BaseExp(object):
         except IOError:
             os.makedirs(os.path.split(save_loc)[0])
             f=open(save_loc,'wb')
-        cPickle.dump(data,f)
+        pickle.dump(data,f)
     
     def checkRespForQuitKey(self,resp):
             if self.quit_key in resp:

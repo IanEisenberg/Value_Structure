@@ -9,17 +9,18 @@ def create_value_graph(graph, seeds, weight = .95, steps = 1000,
                        scaling=1, offset=0):
     value_graph = {key:.5 for key in graph.keys()}
     value_graph.update(seeds)
-    node = np.random.choice(value_graph.keys())
+    node = np.random.choice(list(value_graph.keys()))
     for step in range(steps):
         connections = graph[node]
         avg_val = np.mean([value_graph[i] for i in connections])
         value_graph[node] = value_graph[node]*weight + avg_val*(1-weight)
         node = np.random.choice(graph[node])
     # scale 
-    min_value = np.min(value_graph.values())
+    values = list(value_graph.values())
+    min_value = np.min(values)
     for k in value_graph.keys():
         value_graph[k]-=min_value
-    max_value = np.max(value_graph.values())
+    max_value = np.max(values)
     for k in value_graph.keys():
         value_graph[k]/=max_value
     value_graph = {k:v*scaling+offset for k,v in value_graph.items()}
@@ -46,7 +47,7 @@ def extract_rt_relationships(structuredata):
     return relational_matrix
     
 def gen_sequence(graph, n_steps):
-    curr_i = np.random.choice(graph.keys())
+    curr_i = np.random.choice(list(graph.keys()))
     sequence = []
     for _ in range(n_steps):
         sequence.append(curr_i)
@@ -63,7 +64,7 @@ def gen_parsing_trials(graph, stims, n_steps=600, duration=1.5, seed=None):
     if seed:
         np.random.seed(seed)
     blocks = n_steps//15
-    curr_i = np.random.choice(graph.keys())
+    curr_i = np.random.choice(list(graph.keys()))
     block_types = ['hamiltonian','random','hamiltonian_reversed','random']
     sequence = []
     for b in range(blocks):
