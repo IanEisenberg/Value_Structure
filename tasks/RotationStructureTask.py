@@ -12,7 +12,7 @@ generic task using psychopy
 from BaseExp import BaseExp
 import numpy as np
 from psychopy import prefs
-prefs.general['audioLib'] = ['pygame'] # sounddevice
+prefs.general['audioLib'] = ['sounddevice'] # sounddevice
 from psychopy import visual, core, event, sound
 from random import sample
 from utils.utils import gen_rotstructure_trials

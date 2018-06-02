@@ -1,8 +1,3 @@
-# initialize pygame mixer to remove sound latency
-import pygame
-pygame.mixer.pre_init(22100, -16, 2, 64)
-pygame.mixer.init()
-
 import numpy as np
 import os
 from tasks.RLTask import RLTask

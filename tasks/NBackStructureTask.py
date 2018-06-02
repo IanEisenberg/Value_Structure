@@ -12,7 +12,7 @@ generic task using psychopy
 from BaseExp import BaseExp
 import numpy as np
 from psychopy import prefs
-prefs.general['audioLib'] = ['pygame'] # sounddevoce
+prefs.general['audioLib'] = ['sounddevice'] # sounddevoce
 from psychopy import visual, core, event, sound
 from random import sample
 from utils.utils import gen_nbackstructure_trials
