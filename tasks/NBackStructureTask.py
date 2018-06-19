@@ -17,10 +17,6 @@ from psychopy import visual, core, event, sound
 from random import sample
 from utils.utils import gen_nbackstructure_trials
 
-# play a sound at beginning to ensure that psychopy's sound is working
-error_sound = sound.Sound(secs=.1,value=500)
-miss_sound = sound.Sound(secs=.1,value=700)
-
 class NBackStructureTask(BaseExp):
     """ class defining a probabilistic context task
     """
@@ -75,7 +71,9 @@ class NBackStructureTask(BaseExp):
     #**************************************************************************
     # ******* Display Functions **************
     #**************************************************************************
-
+    def play_sound(self, value=500):
+        sound.Sound(secs=.1, value=value).play()
+    
     def presentStim(self, stim_file, allowed_keys=None, textstim=None, 
                     duration=None, correct_choice=None):
         if allowed_keys is None:
@@ -99,9 +97,10 @@ class NBackStructureTask(BaseExp):
                                      timeStamped=stim_clock)
                 for key,response_time in keys:
                     self.checkRespForQuitKey(key)
-                    if correct_choice:
-                        if key!=correct_choice and len(recorded_keys)==0:
-                            error_sound.play()
+                    if (correct_choice and 
+                        len(recorded_keys)==0 and 
+                        key!=correct_choice):
+                            self.play_sound(500)
                     recorded_keys+=keys
         else:
             while len(recorded_keys) == 0:
@@ -109,11 +108,11 @@ class NBackStructureTask(BaseExp):
                                      timeStamped=stim_clock)
                 for key,response_time in keys:
                     self.checkRespForQuitKey(key)
-                    if correct_choice:
-                        if key!=correct_choice and len(recorded_keys)==0:
-                            error_sound.play()
+                    if (correct_choice and 
+                        len(recorded_keys)==0 and 
+                        key!=correct_choice):
+                            self.play_sound(500)
                     recorded_keys+=keys
-                    
         return recorded_keys
         
     def presentTrial(self, trial):
@@ -142,6 +141,7 @@ class NBackStructureTask(BaseExp):
                                 duration = trial['duration'],
                                 correct_choice=correct_choice)
         if len(keys)>0:
+            print('KEYS: ', keys)
             first_key = keys[0]
             choice = ['not_match','match'][self.action_keys.index(first_key[0])]
             # record response
@@ -157,7 +157,7 @@ class NBackStructureTask(BaseExp):
             else:
                 trial['correct']=False
         else:
-            miss_sound.play()
+            self.play_sound(700)
         #print('Nback_Match: %s, correct: %s' % (trial['nback_match'], trial['correct']))
         # log trial and add to data
         self.writeToLog(trial)
@@ -204,113 +204,114 @@ class NBackStructureTask(BaseExp):
                                            'duration': break_length})
                 self.presentTextToWindow('Get Ready!', duration=2)
         
-    def run_task(self):
+    def run_task(self, instruction=True):
         self.setupWindow()
         self.stim_size = self.getSquareSize(self.win)
         self.startTime = core.getTime()
-        self.presentInstruction(
-            """
-            Welcome! 
-            
-            This experiment has three parts. 
-            
-            This first part will take about 35 minutes.
-            
-            Press 5 to continue...
-            """)
-        
-        # instructions
-        intro_text = """
-            In the first part of this study, abstract images
-            will be shown one at a time.
-            
-            Your task is to indicate whether the image shown is 
-            the same as the one shown 2 images before by pressing 
-            the corresponding key:
-            
-            If the image is the same as %s before press the %s.
-            If the image is different, press the %s.
-            
-            You will hear a beep if you choose incorrectly 
-            or miss a response.
-            
-            Press 5 to hear the error beep
-            """
-            
-        self.presentInstruction(intro_text % 
-                                    (self.trial_params['N'],
-                                    (self.action_keys[0].title() + ' key').upper(),
-                                    (self.action_keys[1].title() + ' key').upper()))
-        
-        # show beeps
-        error_sound.play()
-        
-        self.presentInstruction("Press 5 to hear the miss beep")
-        miss_sound.play(); core.wait(.5)
-        
-        self.presentInstruction(
-            """
-            We will start by familiarizing you with the images
-            
-            Press the left and right keys to move through the images.
-            
-            Press 5 to continue...
-            """)
-        self.run_familiarization()
-
+        if instruction:
+            self.presentInstruction(
+                """
+                Welcome! 
                 
-        # structure learning 
-        self.presentInstruction(
-            """
-            Finished with familiarization. We will now practice responding
-            to the images. Remember, indicate whether the image shown is
-            the same as the one shown 2 images before by pressing:
+                This experiment has three parts. 
+                
+                This first part will take about 35 minutes.
+                
+                Press 5 to continue...
+                """)
             
-                %s key: Same as %s before
-                %s key: Different than %s before
+            # instructions
+            intro_text = """
+                In the first part of this study, abstract images
+                will be shown one at a time.
+                
+                Your task is to indicate whether the image shown is 
+                the same as the one shown 2 images before by pressing 
+                the corresponding key:
+                
+                If the image is the same as %s before press the %s.
+                If the image is different, press the %s.
+                
+                You will hear a beep if you choose incorrectly 
+                or miss a response.
+                
+                Press 5 to hear the error beep
+                """
+                
+            self.presentInstruction(intro_text % 
+                                        (self.trial_params['N'],
+                                        (self.action_keys[0].title() + ' key').upper(),
+                                        (self.action_keys[1].title() + ' key').upper()))
             
-            Each image will only come up on the screen for a short 
-            amount of time. Please respond as quickly and accurately 
-            as possible.
-
-            Wait for the experimenter
-            """ % (self.action_keys[1].title(), 
-                    self.trial_params['N'],
-                    self.action_keys[0].title(),
-                    self.trial_params['N']))
-        practice_over = False
-        practice_repeats = 0
-        while not practice_over:
-            avg_acc = self.run_graph_practice()
-            self.presentTextToWindow('Wait for Experimenter')
-            keys, time = self.waitForKeypress([self.trigger_key, '0'])
-            if keys[0][0] == self.trigger_key:
-                practice_over = True
-            else:
-                practice_repeats += 1
-                self.practice_trials = gen_nbackstructure_trials(
-                                self.graph, 
-                                self.stim_files, 
-                                self.trial_params['num_practice_trials'], 
-                                exp_stage='practice_structure_learning',
-                                n=self.trial_params['N'],
-                                seed=self.practice_seed+practice_repeats)
-        
-        self.presentInstruction(
-            """
-            Done with practice. We will now start the first task which will
-            take roughly 35 minutes. There will be %s breaks.
+            # show beeps
+            self.play_sound(500)
             
-                %s key: Same as %s before
-                %s key: Different than %s before
+            self.presentInstruction("Press 5 to hear the miss beep")
+            self.play_sound(700); core.wait(.5)
             
+            self.presentInstruction(
+                """
+                We will start by familiarizing you with the images
+                
+                Press the left and right keys to move through the images.
+                
+                Press 5 to continue...
+                """)
+            self.run_familiarization()
+    
+                    
+            # structure learning 
+            self.presentInstruction(
+                """
+                Finished with familiarization. We will now practice responding
+                to the images. Remember, indicate whether the image shown is
+                the same as the one shown 2 images before by pressing:
+                
+                    %s key: Same as %s before
+                    %s key: Different than %s before
+                
+                Each image will only come up on the screen for a short 
+                amount of time. Please respond as quickly and accurately 
+                as possible.
+    
+                Wait for the experimenter
+                """ % (self.action_keys[1].title(), 
+                        self.trial_params['N'],
+                        self.action_keys[0].title(),
+                        self.trial_params['N']))
+            practice_over = False
+            practice_repeats = 0
+            while not practice_over:
+                avg_acc = self.run_graph_practice()
+                self.presentTextToWindow('Wait for Experimenter')
+                keys, time = self.waitForKeypress([self.trigger_key, '0'])
+                if keys[0][0] == self.trigger_key:
+                    practice_over = True
+                else:
+                    practice_repeats += 1
+                    self.practice_trials = gen_nbackstructure_trials(
+                                    self.graph, 
+                                    self.stim_files, 
+                                    self.trial_params['num_practice_trials'], 
+                                    exp_stage='practice_structure_learning',
+                                    n=self.trial_params['N'],
+                                    seed=self.practice_seed+practice_repeats)
             
-            Wait for the experimenter
-            """ % (self.num_breaks,
-                    self.action_keys[1].title(), 
-                    self.trial_params['N'],
-                    self.action_keys[0].title(),
-                    self.trial_params['N']))
+            self.presentInstruction(
+                """
+                Done with practice. We will now start the first task which will
+                take roughly 35 minutes. There will be %s breaks.
+                
+                    %s key: Same as %s before
+                    %s key: Different than %s before
+                
+                
+                Wait for the experimenter
+                """ % (self.num_breaks,
+                        self.action_keys[1].title(), 
+                        self.trial_params['N'],
+                        self.action_keys[0].title(),
+                        self.trial_params['N']))
             
         self.run_graph_learning()
         

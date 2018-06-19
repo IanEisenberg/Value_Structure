@@ -17,7 +17,7 @@ n_structure_trials = 1400
 n_structure_practice_trials = 60
 n_parse_trials = 600
 fullscreen=False
-
+instruction_on=True
 
 # set up and shuffle stims
 
@@ -105,6 +105,6 @@ parse = ParsingTask(expid='parse',
                     trial_params=parse_trial_params)
 
 # start task
-structure.run_task()
-points = RLtask.run_task()
-parse = parse.run_task()
+structure.run_task(instruction=instruction_on)
+points = RLtask.run_task(instruction=instruction_on)
+parse = parse.run_task(instruction=instruction_on)

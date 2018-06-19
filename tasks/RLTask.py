@@ -44,6 +44,7 @@ class RLTask(BaseExp):
                                                    values, 
                                                    **trial_params)           
         # set up static variables
+        self.num_breaks = 2
         self.action_keys = ['left','right']
         # init Base Exp
         super(RLTask, self).__init__(expid, subjid, save_dir, fullscreen)
@@ -169,7 +170,7 @@ class RLTask(BaseExp):
         self.clearWindow()
         # use different scripts depending on whether the trials were generated
         # using generate_structured_RL_trials or generate_random_RL_trials
-        pause_trials = (len(self.trials)/3, len(self.trials)/3*2)
+        pause_trials = [len(self.trials)//self.num_breaks*i for i in range(1,self.num_breaks)]
         for trial in self.trials:
             self.presentTrial(trial)
             if self.trialnum in pause_trials:
@@ -179,59 +180,60 @@ class RLTask(BaseExp):
                 self.presentInstruction("Press 5 to continue")
                 self.presentTextToWindow('Get Ready!', duration=2)
             
-    def run_task(self, pause_trials = None):
+    def run_task(self, instruction=True, pause_trials=None):
         self.setupWindow()
-        self.stim_size = self.getSquareSize(self.win)        
-        # instructions
-        # introduction
-        texts = []
-        texts.append( \
-            """
-  In this task, two images from the last task will 
-  be shown on the screen at once, as shown.
-  
-  You select one image by pressing the 
-  correponding arrow key (left or right).\n\n\n\n\n\n\n\n\n\n\n
-                  Press 5 to continue...
-            """)
-        
-        texts.append( \
-            """
-  Each image has a chance of earning 1 point when you select it.
-  The chance of earning a point is different for each image
-  
-  For example, one image may result in a point 80% of the time,
-  while another image may result in a point 50% of the time.\n\n\n\n\n\n\n\n\n\n\n
-                  Press 5 to continue...
-            """)
+        self.stim_size = self.getSquareSize(self.win)    
+        if instruction:
+            # instructions
+            # introduction
+            texts = []
+            texts.append( \
+                """
+      In this task, two images from the last task will 
+      be shown on the screen at once, as shown.
+      
+      You select one image by pressing the 
+      correponding arrow key (left or right).\n\n\n\n\n\n\n\n\n\n\n
+                      Press 5 to continue...
+                """)
             
-            
-        for text in texts:
-            intro_stim=visual.TextStim(self.win, 
-                                       text=text,
-                                       font='BiauKai',
-                                       height=.07,
-                                       wrapWidth=100,
-                                       pos=(0,.1))
-            
-            instruction_stims = [self.stim_files[0], self.stim_files[7]]
-            self.draw_stims(instruction_stims, textstim=intro_stim)
-            self.waitForKeypress(self.trigger_key, clear=False)
-
-        self.presentInstruction(
-            """
-            Your goal in this task is to get as many points as possible.
-            
-            After you select an image, most of the time you will be told
-            whether you won a point or not. Occasionally the points will
-            be hidden. Even when they are hidden they count towards
-            your total! 
-            
-            Each trial is short, so please respond quickly while trying 
-            to pick the more rewarding shape.
-            
-            Wait for the experimenter
-            """)
+            texts.append( \
+                """
+      Each image has a chance of earning 1 point when you select it.
+      The chance of earning a point is different for each image
+      
+      For example, one image may result in a point 80% of the time,
+      while another image may result in a point 50% of the time.\n\n\n\n\n\n\n\n\n\n\n
+                      Press 5 to continue...
+                """)
+                
+                
+            for text in texts:
+                intro_stim=visual.TextStim(self.win, 
+                                           text=text,
+                                           font='BiauKai',
+                                           height=.07,
+                                           wrapWidth=100,
+                                           pos=(0,.1))
+                
+                instruction_stims = [self.stim_files[0], self.stim_files[7]]
+                self.draw_stims(instruction_stims, textstim=intro_stim)
+                self.waitForKeypress(self.trigger_key, clear=False)
+    
+            self.presentInstruction(
+                """
+                Your goal in this task is to get as many points as possible.
+                
+                After you select an image, most of the time you will be told
+                whether you won a point or not. Occasionally the points will
+                be hidden. Even when they are hidden they count towards
+                your total! 
+                
+                Each trial is short, so please respond quickly while trying 
+                to pick the more rewarding shape.
+                
+                Wait for the experimenter
+                """)
                 
         self.run_RLtask()
         

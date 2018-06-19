@@ -52,6 +52,7 @@ class RotationStructureTask(BaseExp):
 
         
         # set up static variables
+        self.num_breaks = 3
         self.action_keys = ['z','m']
         np.random.shuffle(self.action_keys)
         # init Base Exp
@@ -204,7 +205,7 @@ class RotationStructureTask(BaseExp):
     def run_graph_learning(self):
         self.trialnum = 0
         # start graph learning
-        pause_trials = [len(self.trials)//4*i for i in range(1,4)]
+        pause_trials = [len(self.trials)//self.num_breaks*i for i in range(1,self.num_breaks)]
         timer_text = "Take a break!\n\nContinue in: \n\n       "
         self.presentTextToWindow('Get Ready!', duration=2)
         self.clearWindow()
@@ -219,72 +220,73 @@ class RotationStructureTask(BaseExp):
                                            'duration': break_length})
                 self.presentTextToWindow('Get Ready!', duration=2)
         
-    def run_task(self, pause_trials = None):
+    def run_task(self, instruction=True, pause_trials=None):
         self.setupWindow()
         self.stim_size = self.getSquareSize(self.win)
         self.startTime = core.getTime()
-        self.presentInstruction(
-            """
-            Welcome! 
+        if instruction:
+            self.presentInstruction(
+                """
+                Welcome! 
+                
+                This experiment has three parts. 
+                
+                This first part will take about 35 minutes.
+                
+                Press 5 to continue...
+                """)
             
-            This experiment has three parts. 
+            # instructions
+            intro_text = """
+                In the first part of this study, abstract images
+                will be shown one at a time for a short amount of time.
+                
+                Your task is to indicate whether 
+                each image is rotated or unrotated.
+                
+                You will hear a beep if you choose incorrectly 
+                or miss a response.
+                
+                Press 5 to hear the error sound
+                """
+                
+            self.presentInstruction(intro_text)
             
-            This first part will take about 35 minutes.
+            # show beeps
+            error_sound.play()
             
-            Press 5 to continue...
-            """)
-        
-        # instructions
-        intro_text = """
-            In the first part of this study, abstract images
-            will be shown one at a time for a short amount of time.
+            self.presentInstruction("Press 5 to hear the 'miss' sound")
+            miss_sound.play(); core.wait(.5)
             
-            Your task is to indicate whether 
-            each image is rotated or unrotated.
+            self.presentInstruction(
+                """
+                Before beginning the 1st task, you will get some practice 
+                seeing each image when it is UNROTATED as well as how it 
+                looks when it IS rotated. 
+                
+                First, we will show you each of the 15 images in their normal 
+                unrotated positions. Your job is simply to look at each image
+                to become familiar with it.
+                
+                Press the left and right keys to move through the images.
+                
+                Press 5 to continue
+                """)
+            self.run_familiarization()
             
-            You will hear a beep if you choose incorrectly 
-            or miss a response.
             
-            Press 5 to hear the error sound
-            """
+            self.presentInstruction(
+                """
+                Now we will show you each image next to its rotated version. 
+                Your job is to pick out which of the two images IS NOT rotated 
+                by pressing the LEFT and RIGHT keys on your keyboard.
+                
+                Press the direction where the image is UNROTATED.
+    
+                Wait for the experimenter
+                """)
             
-        self.presentInstruction(intro_text)
-        
-        # show beeps
-        error_sound.play()
-        
-        self.presentInstruction("Press 5 to hear the 'miss' sound")
-        miss_sound.play(); core.wait(.5)
-        
-        self.presentInstruction(
-            """
-            Before beginning the 1st task, you will get some practice 
-            seeing each image when it is UNROTATED as well as how it 
-            looks when it IS rotated. 
-            
-            First, we will show you each of the 15 images in their normal 
-            unrotated positions. Your job is simply to look at each image
-            to become familiar with it.
-            
-            Press the left and right keys to move through the images.
-            
-            Press 5 to continue
-            """)
-        self.run_familiarization()
-        
-        
-        self.presentInstruction(
-            """
-            Now we will show you each image next to its rotated version. 
-            Your job is to pick out which of the two images IS NOT rotated 
-            by pressing the LEFT and RIGHT keys on your keyboard.
-            
-            Press the direction where the image is UNROTATED.
-
-            Wait for the experimenter
-            """)
-        
-        self.run_familiarization_test()
+            self.run_familiarization_test()
 
                 
         # structure learning 

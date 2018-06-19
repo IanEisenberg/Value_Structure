@@ -115,16 +115,11 @@ class ParsingTask(BaseExp):
         trial['secondary_responses'] = []
         trial['secondary_rts'] = []
         trial['trialnum'] = self.trialnum
-        # change nback_match to false if the last trial was a pause trial
-        if len(self.parsedata)>0 and self.parsedata[-1]['exp_stage'] == 'break':
-            trial['nback_match'] = 0
-        correct_choice = self.action_keys[trial['nback_match']]
         # present stimulus and get response
         event.clearEvents()
         trialClock.reset()
         keys = self.presentStim(trial['stim_file'], 
-                                duration = trial['duration'],
-                                correct_choice=correct_choice)
+                                duration = trial['duration'])
         if len(keys)>0:
             first_key = keys[0]
             # record response
@@ -163,24 +158,25 @@ class ParsingTask(BaseExp):
                                            'duration': break_length})
                 self.presentTextToWindow('Get Ready!', duration=2)
         
-    def run_task(self):
+    def run_task(self, instruction=True):
         self.setupWindow()
         self.stim_size = self.getSquareSize(self.win)
         self.startTime = core.getTime()
-        # instructions
-        intro_text = """
-            In this section, you’ll see a stream of the same 
-            images. We want you to press the SPACEBAR at times in the 
-            sequence that you feel are natural breaking points. 
-            
-            If you are not sure, go with your gut feeling. 
-            
-            Try to make your responses as quickly and 
-            accurately as possible
-            """
-            
-        self.presentInstruction(intro_text)
-    
+        if instruction:
+            # instructions
+            intro_text = """
+                In this section, you’ll see a stream of the same 
+                images you saw previously. Press the SPACEBAR at times in the 
+                sequence that you feel are natural breaking points. 
+                
+                If you are not sure, go with your gut feeling. 
+                
+                Try to make your responses as quickly and 
+                accurately as possible
+                """
+                
+            self.presentInstruction(intro_text)
+        
         self.run_parsing()
         
         # clean up and save
@@ -193,7 +189,7 @@ class ParsingTask(BaseExp):
         
         self.presentInstruction(
             """
-            Done with the first task! Take a break for a few minutes.
+            Done with the third task! Take a break for a few minutes.
             
             Please wait for the experimenter.
             """)

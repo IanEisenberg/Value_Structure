@@ -5,7 +5,7 @@ import pandas as pd
 import random as r
 
 # **********HELPER FUNCTIONS ***********************************
-def create_value_graph(graph, seeds, weight = .95, steps = 1000,
+def create_value_graph(graph, seeds, weight=.95, steps=1000,
                        scaling=1, offset=0):
     value_graph = {key:.5 for key in graph.keys()}
     value_graph.update(seeds)
@@ -16,11 +16,10 @@ def create_value_graph(graph, seeds, weight = .95, steps = 1000,
         value_graph[node] = value_graph[node]*weight + avg_val*(1-weight)
         node = np.random.choice(graph[node])
     # scale 
-    values = list(value_graph.values())
-    min_value = np.min(values)
+    min_value = np.min(list(value_graph.values()))
     for k in value_graph.keys():
         value_graph[k]-=min_value
-    max_value = np.max(values)
+    max_value = np.max(list(value_graph.values()))
     for k in value_graph.keys():
         value_graph[k]/=max_value
     value_graph = {k:v*scaling+offset for k,v in value_graph.items()}
@@ -82,7 +81,7 @@ def gen_parsing_trials(graph, stims, n_steps=600, duration=1.5, seed=None):
     
     last_comm = None
     trials = []
-    for i, (stim_i, walk_type) in enumerate(sequence[0:15]):
+    for i, (stim_i, walk_type) in enumerate(sequence):
         comm = get_community(stim_i)
         if last_comm is not None and comm!=last_comm:
             transition=True
