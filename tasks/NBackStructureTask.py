@@ -141,7 +141,6 @@ class NBackStructureTask(BaseExp):
                                 duration = trial['duration'],
                                 correct_choice=correct_choice)
         if len(keys)>0:
-            print('KEYS: ', keys)
             first_key = keys[0]
             choice = ['not_match','match'][self.action_keys.index(first_key[0])]
             # record response

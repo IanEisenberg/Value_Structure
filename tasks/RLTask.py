@@ -33,6 +33,7 @@ class RLTask(BaseExp):
         self.stim_files = stim_files
         self.sequence_type = sequence_type
         self.correct_tracker = 0 # used to determine when to switch stim set
+        self.trial_params = trial_params
         
         assert self.sequence_type in ['structured', 'random', 'semistructured']
         if self.sequence_type == 'structured':

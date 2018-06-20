@@ -42,7 +42,6 @@ stims = ['images/%s.png' % str(i+1) for i in graph.keys()]
 np.random.shuffle(stims)
 
 # create value graph
-
 np.random.seed(2222)
 seeds = {1:0, 12:1}
 values = create_value_graph(graph, seeds, weight=.97, steps = 3000,
@@ -59,7 +58,7 @@ if structure_task == 'rotation':
                               'proportion_rotated': .15,
                               'seed': 10101}
     
-    structure = RotationStructureTask(expid='structure',
+    structure = RotationStructureTask(expid='rot_structure',
                               subjid=subj, 
                               save_dir=save_dir, 
                               stim_files=stims, 
@@ -73,7 +72,7 @@ elif structure_task == 'nback':
                               'num_practice_trials': n_structure_practice_trials,
                               'seed': 10101}
     
-    structure = NBackStructureTask(expid='structure',
+    structure = NBackStructureTask(expid='nback_structure',
                               subjid=subj, 
                               save_dir=save_dir, 
                               stim_files=stims, 
@@ -106,5 +105,5 @@ parse = ParsingTask(expid='parse',
 
 # start task
 structure.run_task(instruction=instruction_on)
-points = RLtask.run_task(instruction=instruction_on)
 parse = parse.run_task(instruction=instruction_on)
+points = RLtask.run_task(instruction=instruction_on)

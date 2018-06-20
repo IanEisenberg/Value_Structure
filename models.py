@@ -190,7 +190,7 @@ class SR_RLModel(BasicRLModel):
         self.M = self.SR_TD()
     
     def _get_value(self, stim):
-        return self.M[stim,:].dot(self.vals.values())/np.sum(self.M[stim,:])
+        return self.M[stim,:].dot(list(self.vals.values()))/np.sum(self.M[stim,:])
     
     def get_M(self):
         return self.M
