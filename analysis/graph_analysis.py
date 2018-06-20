@@ -1,4 +1,4 @@
-import cPickle
+import pickle
 from glob import glob
 import igraph
 from math import ceil
@@ -17,8 +17,8 @@ import subprocess
 data_loc = path.join('Data','ProcessedData')
 structuredata = pd.read_csv(path.join(data_loc, 'structuredata.csv'))
 valuedata = pd.read_csv(path.join(data_loc, 'valuedata.csv'))
-taskdata = cPickle.load(open(path.join(data_loc,'taskdata.pkl'),'rb'))
-analysis = cPickle.load(open(path.join('Analysis_Results','analysis.pkl'),'rb'))
+taskdata = pickle.load(open(path.join(data_loc,'taskdata.pkl'),'rb'))
+analysis = pickle.load(open(path.join('Analysis_Results','analysis.pkl'),'rb'))
 
 # visual style for graphs
 visual_style = {}
